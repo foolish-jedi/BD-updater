@@ -1,0 +1,2582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Hockey Updater">
+  <title>Hockey Chat Updater</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card: #172136;
+      --card-border: #233352;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --blue: #2563eb;
+      --blue-glow: #3b82f6;
+      --gold: #d97706;
+      --green: #16a34a;
+      --red: #dc2626;
+      --cyan: #06b6d4;
+      --purple: #9333ea;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 10px 10px 80px 10px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* Scoreboard */
+    .scoreboard {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 10px;
+      margin-bottom: 10px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+    .team-input {
+      background: #0b1222;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      font-size: 15px;
+      font-weight: bold;
+      text-align: center;
+      border-radius: 6px;
+      padding: 4px;
+      width: 100%;
+    }
+    .score-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .score-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #25334d;
+      color: #fff;
+      border: 1px solid var(--card-border);
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .score-btn:active { background: #3b82f6; }
+    .score-num { font-size: 30px; font-weight: 800; min-width: 32px; font-variant-numeric: tabular-nums; }
+
+    /* Game Type & Tourney Banner */
+    .game-type-bar {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .game-type-bar::-webkit-scrollbar { display: none; }
+    .game-type-label {
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .game-type-select {
+      background: #0b1222;
+      border: 1px solid var(--card-border);
+      color: #fde047;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 6px;
+      padding: 4px 6px;
+      flex-shrink: 0;
+    }
+    .tourney-name-input {
+      background: #0b1222;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      padding: 4px 8px;
+      flex-grow: 1;
+      min-width: 120px;
+    }
+
+    /* Period & Time Status Bar */
+    .period-bar {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 8px;
+      padding-top: 8px;
+      padding-bottom: 2px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .period-bar::-webkit-scrollbar { display: none; }
+    .period-select {
+      background: #0b1222;
+      border: 1px solid var(--card-border);
+      color: #38bdf8;
+      font-size: 13px;
+      font-weight: bold;
+      border-radius: 6px;
+      padding: 6px 8px;
+      flex-shrink: 0;
+    }
+    .status-btn {
+      background: #25334d;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .status-btn:active { background: var(--blue); }
+
+    /* Time Context Chips */
+    .time-chips-bar {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      margin-top: 6px;
+      padding-top: 4px;
+      scrollbar-width: none;
+    }
+    .time-chips-bar::-webkit-scrollbar { display: none; }
+    .time-chip {
+      background: #0b1222;
+      border: 1px solid var(--card-border);
+      color: var(--muted);
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 12px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .time-chip.active {
+      background: #1e3a8a;
+      border-color: #60a5fa;
+      color: #bfdbfe;
+    }
+
+    /* Sticky Output Box */
+    .output-box {
+      background: #080d1a;
+      border: 2px solid var(--blue);
+      border-radius: var(--radius);
+      padding: 10px;
+      margin-bottom: 10px;
+      position: sticky;
+      top: 6px;
+      z-index: 50;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    }
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .header-toggles {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .mode-toggle {
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #93c5fd;
+      cursor: pointer;
+    }
+    .mode-toggle.announcer-toggle {
+      color: #facc15;
+      font-weight: 700;
+    }
+    .btn-clear-output {
+      background: #25334d;
+      border: 1px solid var(--card-border);
+      color: #94a3b8;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.1s;
+    }
+    .btn-clear-output:active {
+      background: #334155;
+      color: #fff;
+    }
+    .output-text {
+      width: 100%;
+      min-height: 56px;
+      background: #151e30;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14.5px;
+      line-height: 1.35;
+      padding: 8px;
+      resize: none;
+      overflow-y: hidden;
+      box-sizing: border-box;
+      transition: height 0.15s ease-out;
+    }
+    .btn-row {
+      display: grid;
+      grid-template-columns: 2fr 1.8fr 1fr 1fr;
+      gap: 5px;
+      margin-top: 6px;
+    }
+    .btn-action {
+      padding: 9px 4px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 700;
+      font-size: 12.5px;
+      cursor: pointer;
+      color: #fff;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .btn-share { background: linear-gradient(180deg, #16a34a 0%, #15803d 100%); }
+    .btn-copy { background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%); }
+    .btn-rephrase { background: #334155; }
+    .btn-undo { background: #475569; }
+
+    /* Number Selector Card */
+    .section {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .sec-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .player-indicator-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .player-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .tag-primary {
+      background: #1e3a8a;
+      border: 1px solid #3b82f6;
+      color: #bfdbfe;
+    }
+    .tag-assist {
+      background: #78350f;
+      border: 1px solid #d97706;
+      color: #fde68a;
+    }
+    .tag-clear {
+      font-size: 13px;
+      cursor: pointer;
+      opacity: 0.8;
+    }
+
+    .num-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+    .num-btn {
+      background: #0b1222;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 8px 0;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.1s;
+      position: relative;
+    }
+    .num-btn:active { transform: scale(0.95); }
+    .num-btn .goal-counter-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #ea580c;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      border-radius: 8px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid #0b1120;
+      box-shadow: 0 0 6px rgba(234, 88, 12, 0.8);
+      pointer-events: none;
+    }
+    .num-btn .goal-counter-badge.hat-trick {
+      background: #eab308;
+      color: #713f12;
+      box-shadow: 0 0 8px rgba(234, 179, 8, 1);
+    }
+    .num-btn.active-primary {
+      background: var(--blue);
+      border-color: #60a5fa;
+      color: #fff;
+      box-shadow: 0 0 8px rgba(37, 99, 235, 0.6);
+    }
+    .num-btn.active-assist {
+      background: var(--gold);
+      border-color: #fbbf24;
+      color: #fff;
+      box-shadow: 0 0 8px rgba(217, 119, 6, 0.6);
+    }
+    .num-btn.goalie {
+      border-color: #06b6d4;
+      color: #a5f3fc;
+      background: #042f2e;
+    }
+    .num-btn.goalie.active-primary {
+      background: #0891b2;
+      border-color: #67e8f9;
+      color: #fff;
+    }
+
+    .custom-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .custom-row input {
+      width: 70px;
+      background: #0b1222;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: #fff;
+      text-align: center;
+      padding: 5px;
+      font-size: 13px;
+    }
+    .custom-row button {
+      background: #25334d;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 6px 9px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Play Categories */
+    .cat-tabs {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      margin-bottom: 8px;
+      scrollbar-width: none;
+    }
+    .cat-tabs::-webkit-scrollbar { display: none; }
+    .cat-btn {
+      background: #0b1222;
+      border: 1px solid var(--card-border);
+      color: var(--muted);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: bold;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .cat-btn.active {
+      background: var(--blue);
+      color: #fff;
+      border-color: #60a5fa;
+    }
+
+    /* Play Action Buttons */
+    .play-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+    .play-btn {
+      background: #0b1222;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 9px 11px;
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .play-btn:active { background: #25334d; }
+    .play-btn.goal { border-color: var(--gold); }
+    .play-btn.opp { border-color: var(--red); }
+    .badge-add {
+      font-size: 11px;
+      background: #1e293b;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #94a3b8;
+    }
+
+    /* Reset Game Footer */
+    .footer-tools {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      padding: 8px 4px;
+    }
+    .reset-btn {
+      background: transparent;
+      border: 1px solid #475569;
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SCOREBOARD -->
+  <div class="scoreboard">
+    <!-- Tournament / Game Context Banner -->
+    <div class="game-type-bar">
+      <span class="game-type-label">🏆 Game:</span>
+      <select id="gameTypeSelect" class="game-type-select" onchange="saveGameState()">
+        <option value="">League / Regular</option>
+        <option value="Round Robin">Round Robin</option>
+        <option value="Round Robin Game 1">RR Game 1</option>
+        <option value="Round Robin Game 2">RR Game 2</option>
+        <option value="Round Robin Game 3">RR Game 3</option>
+        <option value="Quarter-Final">Quarter-Final</option>
+        <option value="Semi-Final">Semi-Final</option>
+        <option value="Championship Final">🏆 Championship Final</option>
+        <option value="Exhibition">Exhibition</option>
+      </select>
+      <input type="text" id="tourneyNameInput" class="tourney-name-input" placeholder="Tournament Name (opt.)" oninput="saveGameState()">
+    </div>
+
+    <div>
+      <input type="text" id="ourTeam" class="team-input" value="Bulldogs" oninput="saveGameState()">
+      <div class="score-row">
+        <button class="score-btn" onclick="adjScore('our', -1)">−</button>
+        <span id="ourScore" class="score-num">0</span>
+        <button class="score-btn" onclick="adjScore('our', 1)">+</button>
+      </div>
+    </div>
+    <div style="font-weight: bold; color: var(--muted); font-size: 13px;">VS</div>
+    <div>
+      <input type="text" id="oppTeam" class="team-input" value="Hawks" oninput="saveGameState()">
+      <div class="score-row">
+        <button class="score-btn" onclick="adjScore('opp', -1)">−</button>
+        <span id="oppScore" class="score-num">0</span>
+        <button class="score-btn" onclick="adjScore('opp', 1)">+</button>
+      </div>
+    </div>
+
+    <!-- Period & Status Bar -->
+    <div class="period-bar">
+      <select id="periodSelect" class="period-select" onchange="saveGameState()">
+        <option value="1st">1st Period</option>
+        <option value="2nd">2nd Period</option>
+        <option value="3rd">3rd Period</option>
+        <option value="OT">Overtime</option>
+        <option value="Final">Final</option>
+      </select>
+      <button class="status-btn" onclick="periodStatus('warmup')">🏒 Warmup</button>
+      <button class="status-btn" onclick="periodStatus('puck-drop')">🏁 Puck Drop</button>
+      <button class="status-btn" onclick="periodStatus('period-end')">⏸ Period End</button>
+      <button class="status-btn" onclick="periodStatus('game-final')">🏆 Game Final</button>
+    </div>
+
+    <!-- Time Context Tags -->
+    <div class="time-chips-bar">
+      <span style="font-size: 10px; font-weight: bold; color: var(--muted); align-self: center; margin-right: 2px;">TIME:</span>
+      <button class="time-chip active" id="chip-time-none" onclick="setTimeTag('')">None</button>
+      <button class="time-chip" id="chip-time-early" onclick="setTimeTag('Early')">Early</button>
+      <button class="time-chip" id="chip-time-mid" onclick="setTimeTag('Mid')">Mid</button>
+      <button class="time-chip" id="chip-time-late" onclick="setTimeTag('Late in the period')">Late</button>
+      <button class="time-chip" id="chip-time-under2" onclick="setTimeTag('Under 2 mins left')">&lt; 2 Mins</button>
+      <button class="time-chip" id="chip-time-finalmin" onclick="setTimeTag('Final minute')">Final Min</button>
+    </div>
+  </div>
+
+  <!-- STICKY OUTPUT & MULTI-STEP BUILDER -->
+  <div class="output-box">
+    <div class="output-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size: 11px; font-weight: bold; color: #93c5fd;" id="statusLabel">MESSAGE PREVIEW</span>
+        <button type="button" class="btn-clear-output" onclick="clearOutput()" title="Clear text box">✕ Clear</button>
+      </div>
+      <div class="header-toggles">
+        <label class="mode-toggle announcer-toggle">
+          <input type="checkbox" id="announcerToggle" checked onchange="saveGameState()">
+          <span>🎙️ Play-by-Play</span>
+        </label>
+        <label class="mode-toggle">
+          <input type="checkbox" id="multiStepToggle" checked onchange="saveGameState()">
+          <span>Multi-Step</span>
+        </label>
+      </div>
+    </div>
+    <textarea id="output" class="output-text" placeholder="Select player # then tap play..." oninput="autoResizeTextarea(); saveGameState()"></textarea>
+    <div class="btn-row">
+      <button id="shareBtn" class="btn-action btn-share" onclick="shareNative()">📤 Share</button>
+      <button id="copyBtn" class="btn-action btn-copy" onclick="copyText()">📋 Copy</button>
+      <button class="btn-action btn-rephrase" onclick="rephrase()">🔄 Rephrase</button>
+      <button class="btn-action btn-undo" onclick="undoLastAction()">↩ Undo</button>
+    </div>
+  </div>
+
+  <!-- PLAYER SELECTOR -->
+  <div class="section">
+    <div class="sec-title">
+      <span>1. Select Player (Tap 1st = Primary • Tap 2nd = Assist)</span>
+      <span style="cursor:pointer; color:#93c5fd;" onclick="clearPlayers()">Clear All</span>
+    </div>
+
+    <!-- Active Indicators -->
+    <div class="player-indicator-row">
+      <div id="badgePrimary" class="player-tag tag-primary" style="display:none;">
+        <span>Player: <strong id="lblPrimary">#0</strong></span>
+        <span class="tag-clear" onclick="setPrimary(null)">✕</span>
+      </div>
+      <div id="badgeAssist" class="player-tag tag-assist" style="display:none;">
+        <span>Assist: <strong id="lblAssist">#0</strong></span>
+        <span class="tag-clear" onclick="setAssist(null)">✕</span>
+      </div>
+    </div>
+
+    <!-- Roster Grid (Hardcoded HTML so it NEVER disappears in Quick Look or offline) -->
+    <div class="num-grid" id="numGrid">
+      <button class="num-btn" id="pbtn-2" onclick="onPlayerTap(2)">#2</button>
+      <button class="num-btn" id="pbtn-6" onclick="onPlayerTap(6)">#6</button>
+      <button class="num-btn" id="pbtn-7" onclick="onPlayerTap(7)">#7</button>
+      <button class="num-btn" id="pbtn-8" onclick="onPlayerTap(8)">#8</button>
+      <button class="num-btn" id="pbtn-10" onclick="onPlayerTap(10)">#10</button>
+      <button class="num-btn" id="pbtn-16" onclick="onPlayerTap(16)">#16</button>
+      <button class="num-btn" id="pbtn-18" onclick="onPlayerTap(18)">#18</button>
+      <button class="num-btn" id="pbtn-22" onclick="onPlayerTap(22)">#22</button>
+      <button class="num-btn" id="pbtn-23" onclick="onPlayerTap(23)">#23</button>
+      <button class="num-btn" id="pbtn-24" onclick="onPlayerTap(24)">#24</button>
+      <button class="num-btn" id="pbtn-27" onclick="onPlayerTap(27)">#27</button>
+      <button class="num-btn" id="pbtn-72" onclick="onPlayerTap(72)">#72</button>
+      <button class="num-btn" id="pbtn-93" onclick="onPlayerTap(93)">#93</button>
+      <button class="num-btn" id="pbtn-97" onclick="onPlayerTap(97)">#97</button>
+      <button class="num-btn goalie" id="pbtn-29" onclick="onPlayerTap(29)" title="Goalie #29">🧤#29</button>
+      <button class="num-btn goalie" id="pbtn-74" onclick="onPlayerTap(74)" title="Goalie #74">🧤#74</button>
+    </div>
+
+    <!-- Custom Number Input -->
+    <div class="custom-row">
+      <input type="number" id="customNum" placeholder="# custom">
+      <button onclick="setCustom('primary')">+ Set Player</button>
+      <button onclick="setCustom('assist')">+ Set Assist</button>
+      <button style="margin-left:auto;" onclick="clearPlayers()">Clear #</button>
+    </div>
+  </div>
+
+  <!-- PLAY CATEGORY TABS & BUTTONS -->
+  <div class="section">
+    <div class="sec-title">2. Choose Play / Action</div>
+    
+    <div class="cat-tabs">
+      <button class="cat-btn active" onclick="showTab('setup', this)">🏒 1. Setup / Moves</button>
+      <button class="cat-btn" onclick="showTab('finish', this)">🚨 2. Goals / Finish</button>
+      <button class="cat-btn" onclick="showTab('hustle', this)">💪 Hustle & Grind</button>
+      <button class="cat-btn" onclick="showTab('penalties', this)">⚡ Penalties</button>
+      <button class="cat-btn" onclick="showTab('defense', this)">🛡️ Defense</button>
+      <button class="cat-btn" onclick="showTab('goalie', this)">🧤 Goalie</button>
+      <button class="cat-btn" onclick="showTab('opp', this)">🔴 Opponent</button>
+    </div>
+
+    <!-- TAB 1: SETUPS & PASSES -->
+    <div id="tab-setup" class="play-grid">
+      <button class="play-btn" onclick="applyPlay('setup-coast-to-coast')">
+        <span>⚡ Coast-to-coast end-to-end rush</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('setup-point-hold')">
+        <span>📌 Keeps puck in at the point</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('setup-cross-crease')">
+        <span>⚡ Cross-crease pass</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('setup-down-wing')">
+        <span>💨 Wheels down the wing</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('setup-toe-drag')">
+        <span>🪄 Silky toe-drag past D</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('setup-give-and-go')">
+        <span>🔄 Give-and-go rush</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('setup-feed-slot')">
+        <span>🎯 Feeds puck into the slot</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('setup-breakaway-pass')">
+        <span>🏹 Sprung on breakaway</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('setup-screen-traffic')">
+        <span>🧱 Net-front screen & traffic</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('setup-board-win')">
+        <span>💪 Wins battle on boards</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+    </div>
+
+    <!-- TAB 2: GOALS / FINISHES -->
+    <div id="tab-finish" class="play-grid" style="display:none;">
+      <button class="play-btn goal" onclick="applyPlay('goal-buries-it')">
+        <span>🚨 Buries it in the net! (+1)</span>
+        <span style="color:#f59e0b; font-weight:bold;">Goal</span>
+      </button>
+      <button class="play-btn goal" onclick="applyPlay('goal-top-shelf')">
+        <span>🎯 Snipes it top shelf! (+1)</span>
+        <span style="color:#f59e0b; font-weight:bold;">Goal</span>
+      </button>
+      <button class="play-btn goal" onclick="applyPlay('goal-breakaway-deke')">
+        <span>💨 Breakaway deke & tuck! (+1)</span>
+        <span style="color:#f59e0b; font-weight:bold;">Goal</span>
+      </button>
+      <button class="play-btn goal" onclick="applyPlay('goal-bangs-home')">
+        <span>💥 Bangs home the rebound! (+1)</span>
+        <span style="color:#f59e0b; font-weight:bold;">Goal</span>
+      </button>
+      <button class="play-btn goal" onclick="applyPlay('goal-bar-down')">
+        <span>🔔 Bar-down laser! (+1)</span>
+        <span style="color:#f59e0b; font-weight:bold;">Goal</span>
+      </button>
+      <button class="play-btn goal" onclick="applyPlay('goal-one-timer')">
+        <span>⚡ Heavy one-timer! (+1)</span>
+        <span style="color:#f59e0b; font-weight:bold;">Goal</span>
+      </button>
+      <button class="play-btn goal" onclick="applyPlay('goal-tip-in')">
+        <span>🏒 Tip-in / net-front deflection! (+1)</span>
+        <span style="color:#f59e0b; font-weight:bold;">Goal</span>
+      </button>
+      <button class="play-btn goal" onclick="applyPlay('goal-backhand-roof')">
+        <span>🪓 Backhand roof job! (+1)</span>
+        <span style="color:#f59e0b; font-weight:bold;">Goal</span>
+      </button>
+      <button class="play-btn goal" onclick="applyPlay('goal-wraparound')">
+        <span>🔄 Sneaky wraparound! (+1)</span>
+        <span style="color:#f59e0b; font-weight:bold;">Goal</span>
+      </button>
+      <button class="play-btn goal" onclick="applyPlay('goal-five-hole')">
+        <span>🕳️ Slides it five-hole! (+1)</span>
+        <span style="color:#f59e0b; font-weight:bold;">Goal</span>
+      </button>
+      <button class="play-btn goal" onclick="applyPlay('goal-point-blast')">
+        <span>💣 Heavy point blast slapshot! (+1)</span>
+        <span style="color:#f59e0b; font-weight:bold;">Goal</span>
+      </button>
+      <button class="play-btn goal" onclick="applyPlay('goal-empty-net')">
+        <span>🔒 Empty net dagger! (+1)</span>
+        <span style="color:#f59e0b; font-weight:bold;">Goal</span>
+      </button>
+    </div>
+
+    <!-- TAB 3: HUSTLE & GRIND (UNSUNG HERO PLAYS) -->
+    <div id="tab-hustle" class="play-grid" style="display:none;">
+      <button class="play-btn" onclick="applyPlay('hustle-backcheck')">
+        <span>🏃 Relentless backcheck breaks up rush</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('hustle-forecheck')">
+        <span>🌪️ Heavy forecheck forces turnover</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('hustle-draws-penalty')">
+        <span>🎯 Drives hard & draws penalty!</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('hustle-faceoff-win')">
+        <span>🏒 Clean faceoff win</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('hustle-net-drive')">
+        <span>🔥 Strong power drive to the net</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+    </div>
+
+    <!-- TAB 4: PENALTIES -->
+    <div id="tab-penalties" class="play-grid" style="display:none;">
+      <button class="play-btn" onclick="applyPlay('pen-pp-start')">
+        <span>⚡ Power Play for our team!</span>
+        <span style="color:#a855f7; font-weight:bold;">PP</span>
+      </button>
+      <button class="play-btn" style="border-color:#a855f7; background: #2e1065;" onclick="applyPlay('pen-5on3')">
+        <span>🔥 5-on-3 Two-Man Advantage!</span>
+        <span style="color:#e9d5ff; font-weight:bold;">5-on-3</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('pen-pk-start')">
+        <span>🛡️ Penalty against us (PK)</span>
+        <span style="color:#eab308; font-weight:bold;">PK</span>
+      </button>
+      <button class="play-btn" style="border-color:#eab308; background: #422006;" onclick="applyPlay('pen-3on5')">
+        <span>🛡️ 3-on-5 Penalty Kill (Two-Man Down)</span>
+        <span style="color:#fde047; font-weight:bold;">3-on-5</span>
+      </button>
+      <button class="play-btn" style="border-color:#38bdf8; background: #0c4a6e;" onclick="applyPlay('pen-4on4')">
+        <span>⚡ 4-on-4 Open Ice (Coincidental Minors)</span>
+        <span style="color:#bae6fd; font-weight:bold;">4-on-4</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('pen-pk-killed')">
+        <span>✅ Penalty killed off! Even strength</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('pen-tripping')">
+        <span>🏒 Tripping penalty called</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('pen-hooking')">
+        <span>🪝 Hooking penalty called</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('pen-slashing')">
+        <span>⚔️ Slashing penalty called</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+    </div>
+
+    <!-- TAB 5: DEFENSE -->
+    <div id="tab-defense" class="play-grid" style="display:none;">
+      <button class="play-btn" onclick="applyPlay('def-poke')">
+        <span>🏒 Big poke check</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('def-2on1')">
+        <span>🛑 Breaks up 2-on-1 rush</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('def-block')">
+        <span>🧱 Massive shot block</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('def-clear')">
+        <span>🏹 Clears the defensive zone</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+    </div>
+
+    <!-- TAB 6: GOALIE -->
+    <div id="tab-goalie" class="play-grid" style="display:none;">
+      <button class="play-btn" style="border-color: #06b6d4; background: #082f49;" onclick="applyPlay('goalie-change-mid')">
+        <span>🔄 Mid-Game Goalie Switch (Split Game)</span>
+        <span style="color:#67e8f9; font-weight:bold;">Switch</span>
+      </button>
+      <button class="play-btn" style="border-color: #06b6d4; background: #082f49;" onclick="applyPlay('goalie-change-relief')">
+        <span>🔄 Goalie Change (New Goalie in Net)</span>
+        <span style="color:#67e8f9; font-weight:bold;">Switch</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('goalie-glove')">
+        <span>🧤 Flashes the leather glove save!</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('goalie-breakaway')">
+        <span>🧱 Stonewalls the breakaway!</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('goalie-pad')">
+        <span>🦵 Pad save robbery on doorstep!</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+      <button class="play-btn" onclick="applyPlay('goalie-freeze')">
+        <span>❄️ Smothers puck in heavy traffic</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+    </div>
+
+    <!-- TAB 7: OPPONENT -->
+    <div id="tab-opp" class="play-grid" style="display:none;">
+      <button class="play-btn opp" onclick="applyPlay('opp-goal')">
+        <span>🔴 Opponent Goal (Opp +1)</span>
+        <span style="color:#ef4444; font-weight:bold;">Opp Goal</span>
+      </button>
+      <button class="play-btn opp" onclick="applyPlay('opp-scramble')">
+        <span>🔴 Opponent rebound/scramble (Opp +1)</span>
+        <span style="color:#ef4444; font-weight:bold;">Opp Goal</span>
+      </button>
+      <button class="play-btn opp" onclick="applyPlay('opp-pressure')">
+        <span>⚠️ Opponent heavy pressure in our zone</span>
+        <span class="badge-add">+ Step</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- FOOTER / NEW GAME -->
+  <div class="footer-tools">
+    <button class="reset-btn" onclick="resetNewGame()">🔄 New Game (Reset Scores)</button>
+    <span style="font-size: 10.5px; color: var(--muted);">Auto-saved to device</span>
+  </div>
+
+  <script>
+    // App State
+    let ourScore = 0;
+    let oppScore = 0;
+    let playerGoals = {}; // { 2: 1, 24: 3 }
+    let primaryPlayer = null;
+    let assistPlayer = null;
+    let currentTimeTag = '';
+    let lastKey = null;
+    let lastVarIndex = 0;
+    let currentSteps = [];
+    let undoStack = [];
+
+    // Team Roster (numerical order)
+    const skaters = [2, 6, 7, 8, 10, 16, 18, 22, 23, 24, 27, 72, 93, 97];
+    const goalies = [29, 74];
+
+    // 8 to 10 Variations per Play
+    const phrases = {
+      // SETUPS
+      'setup-point-hold': [
+        (p, a) => `${p} keeps it in at the point`,
+        (p, a) => `huge hold at the blue line by ${p}`,
+        (p, a) => `${p} pinches at the point to keep play alive`,
+        (p, a) => `${p} knocks down the clearing attempt at the line`,
+        (p, a) => `smart defensive pinch at the blue line by ${p}`,
+        (p, a) => `${p} holds the zone under pressure`,
+        (p, a) => `great stick at the point by ${p} to keep puck deep`,
+        (p, a) => `${p} walls off the boards to hold the blue line`,
+        (p, a) => `clutch blue-line keep by ${p}`,
+        (p, a) => `${p} keeps offensive pressure alive at the line`
+      ,
+        (p, a) => `acrobatic glove-down at the blue line by ${p} to keep it in`,
+        (p, a) => `${p} walks the line with poise and holds the zone`,
+        (p, a) => `heads-up keep at the blue line by ${p}`,
+        (p, a) => `${p} knocks the clearing attempt down with the chest!`,
+        (p, a) => `composed stick-handling along the blue line by ${p}`,
+        (p, a) => `timely pinch by ${p} keeping the pressure alive`
+      ],
+      'setup-cross-crease': [
+        (p, a) => a ? `${a} dishes a beauty cross-crease pass to ${p}` : `${p} dishes a beauty cross-crease pass`,
+        (p, a) => a ? `${a} feeds a backdoor cross-crease pass to ${p}` : `${p} feeds a backdoor cross-crease pass`,
+        (p, a) => a ? `gorgeous cross-crease feed by ${a} right on the tape of ${p}` : `gorgeous cross-crease feed by ${p}`,
+        (p, a) => a ? `${a} threads the needle across the crease to ${p}` : `${p} threads the needle across the crease`,
+        (p, a) => a ? `${a} with a tape-to-tape cross-crease dish to ${p}` : `${p} with a tape-to-tape cross-crease dish`,
+        (p, a) => a ? `unreal vision by ${a} sliding it across the blue paint to ${p}` : `unreal vision by ${p} sliding it across the ice`,
+        (p, a) => a ? `${a} sauces a backdoor pass across the crease to ${p}` : `${p} sauces a pass backdoor across the blue paint`,
+        (p, a) => a ? `${a} draws the goalie and slides it cross-crease to ${p}` : `${p} draws the goalie and slides it cross-crease`,
+        (p, a) => a ? `crisp cross-crease setup from ${a} finding ${p}` : `crisp cross-crease setup by ${p}`,
+        (p, a) => a ? `${a} spots ${p} wide open backdoor across the crease` : `${p} spots the open skater backdoor across the crease`
+      ,
+        (p, a) => a ? `${a} spots the seam and threads a backdoor pass to ${p}` : `${p} spots the backdoor lane`,
+        (p, a) => a ? `laser cross-crease feed from ${a} finding ${p}` : `laser cross-crease feed by ${p}`,
+        (p, a) => a ? `${a} with the patience of a saint before sliding it cross-crease to ${p}` : `${p} with the patience to find the seam`,
+        (p, a) => a ? `pinpoint lateral dish from ${a} hitting ${p}` : `pinpoint lateral pass across the zone by ${p}`,
+        (p, a) => a ? `${a} draws two defenders and slips it cross-crease to ${p}` : `${p} slips it across traffic`,
+        (p, a) => a ? `saucer pass right over the defender's stick from ${a} to ${p}` : `saucer pass across the zone by ${p}`
+      ],
+      'setup-down-wing': [
+        (p, a) => `${p} flies down the wing with speed`,
+        (p, a) => `${p} drives hard down the boards`,
+        (p, a) => `${p} turns on the jets along the boards`,
+        (p, a) => `${p} carries it wide into the offensive zone`,
+        (p, a) => `speedy rush down the wing by ${p}`,
+        (p, a) => `${p} blows past the defender down the flank`,
+        (p, a) => `${p} wheels around the outside with pace`,
+        (p, a) => `powerful rush up the wing by ${p}`,
+        (p, a) => `${p} gains the zone with speed down the boards`,
+        (p, a) => `${p} beats the defenseman wide down the wing`
+      ,
+        (p, a) => `${p} drops the shoulder and protects the biscuit down the flank`,
+        (p, a) => `flying up the boards: ${p} accelerates with the puck`,
+        (p, a) => `${p} burns the defenseman on the outside edge`,
+        (p, a) => `pure speed down the wing by ${p}`,
+        (p, a) => `${p} wheels wide, cuts in towards the circle`,
+        (p, a) => `flying rush up ice by ${p} along the boards`
+      ],
+      'setup-toe-drag': [
+        (p, a) => `${p} pulls off a filthy toe-drag`,
+        (p, a) => `slick toe-drag by ${p} turning the D inside out`,
+        (p, a) => `${p} puts the defender in a blender with a toe-drag`,
+        (p, a) => `${p} dangles past the defenseman cleanly`,
+        (p, a) => `silky mitts on display as ${p} walks around the D`,
+        (p, a) => `${p} with a nasty deke at the top of the circles`,
+        (p, a) => `smooth hands from ${p} dodging the stick check`,
+        (p, a) => `${p} pulls the puck around the defender's reach`,
+        (p, a) => `filthy moves by ${p} cutting into open ice`,
+        (p, a) => `${p} cuts inside with a wicked toe-drag move`
+      ,
+        (p, a) => `${p} pulls the puck through the triangles cleanly`,
+        (p, a) => `electric deke by ${p} shaking off the check`,
+        (p, a) => `${p} changes the shooting angle with a silky drag`,
+        (p, a) => `heads-up dangling by ${p} cutting towards the slot`,
+        (p, a) => `${p} sells the pass and pulls a quick toe-drag inside`,
+        (p, a) => `slick handles by ${p} navigating through tight traffic`
+      ],
+      'setup-feed-slot': [
+        (p, a) => a ? `${a} feeds a pass right into the high slot to ${p}` : `${p} feeds a pass right into the high slot`,
+        (p, a) => a ? `${a} dishes from behind the net into the slot to ${p}` : `${p} dishes from behind the net into the slot`,
+        (p, a) => a ? `laser pass into the wheelhouse of ${p} from ${a}` : `laser pass into the wheelhouse by ${p}`,
+        (p, a) => a ? `${a} spots ${p} and feeds the slot` : `${p} spots an opening and feeds the slot`,
+        (p, a) => a ? `tape-to-tape centering feed by ${a} to ${p}` : `tape-to-tape centering feed by ${p}`,
+        (p, a) => a ? `${a} delivers a perfect pass into the slot for ${p}` : `${p} delivers a perfect pass into the slot`,
+        (p, a) => a ? `great vision by ${a} finding ${p} in front` : `great vision by ${p} finding the open stick in front`,
+        (p, a) => a ? `${a} centers the puck into the prime scoring area for ${p}` : `${p} centers the puck into the prime scoring area`,
+        (p, a) => a ? `${a} slides the biscuit out into the slot to ${p}` : `${p} slides the biscuit out into the slot`,
+        (p, a) => a ? `unselfish centering pass from ${a} finding ${p}` : `unselfish centering pass from ${p}`
+      ,
+        (p, a) => a ? `${a} curls out of the corner and tees up ${p} in the slot` : `${p} curls and finds the slot`,
+        (p, a) => a ? `bullet centering pass from ${a} finding ${p} in the house` : `bullet pass into the slot by ${p}`,
+        (p, a) => a ? `${a} chips the puck out front to ${p}` : `${p} chips the puck out front`,
+        (p, a) => a ? `${a} looks off the defenseman and hits ${p} right in stride` : `${p} finds the open stick in the slot`,
+        (p, a) => a ? `soft touch pass into the middle from ${a} to ${p}` : `soft touch pass into the slot by ${p}`,
+        (p, a) => a ? `${a} threads a pass through two sticks onto ${p}'s tape` : `${p} threads a pass into the middle`
+      ],
+      'setup-breakaway-pass': [
+        (p, a) => a ? `spring pass from ${a} sends ${p} all alone on the breakaway` : `${p} springs a teammate all alone on a breakaway`,
+        (p, a) => a ? `perfect stretch pass by ${a} hitting ${p} in stride for a breakaway` : `perfect stretch pass by ${p} creating a breakaway`,
+        (p, a) => a ? `unreal outlet feed from ${a} sending ${p} in alone` : `unreal outlet feed from ${p} sending them in alone`,
+        (p, a) => a ? `${a} chips it ahead to send ${p} on a clean breakaway` : `${p} chips it ahead for a clean breakaway`,
+        (p, a) => a ? `${a} catches the defense flat-footed with a breakaway feed to ${p}` : `${p} catches the defense flat-footed with a breakaway feed`,
+        (p, a) => a ? `quarterback pass by ${a} unlocking a breakaway for ${p}` : `quarterback pass by ${p} unlocking a breakaway`,
+        (p, a) => a ? `${a} sends an aerial flip pass springing ${p} on the break` : `${p} sends an aerial flip pass for a breakaway`,
+        (p, a) => a ? `heads-up stretch play by ${a} finding ${p} on the break` : `heads-up stretch play by ${p} springing the break`,
+        (p, a) => a ? `${a} hits ${p} in stride for the breakaway rush` : `${p} hits the runner in stride for the breakaway`,
+        (p, a) => a ? `sauce pass from ${a} sends ${p} flying in all alone` : `clean breakaway sprung by ${p}`
+      ,
+        (p, a) => a ? `stretch pass right on the tape from ${a} springing ${p}` : `heads-up stretch pass by ${p}`,
+        (p, a) => a ? `${a} chips it off the boards to hit ${p} on the break` : `${p} chips it off the boards on the break`,
+        (p, a) => a ? `vision on full display as ${a} spots ${p} sneaking behind the D` : `${p} sneaks behind the defense`,
+        (p, a) => a ? `${a} banks a pass off the boards springing ${p} all alone` : `bank pass creates a breakaway for ${p}`,
+        (p, a) => a ? `long-distance bomb from ${a} connects with ${p} on the breakaway` : `clean breakaway started by ${p}`,
+        (p, a) => a ? `${a} lofts a saucer pass springing ${p} for the clean break` : `breakaway sprung with speed by ${p}`
+      ],
+      'setup-board-win': [
+        (p, a) => `${p} outworks the opponent to win the puck on the boards`,
+        (p, a) => `gritty board battle won by ${p}`,
+        (p, a) => `${p} digs the loose puck out of the corner`,
+        (p, a) => `${p} outmuscles two players along the wall`,
+        (p, a) => `relentless hustle from ${p} winning the cycle battle`,
+        (p, a) => `${p} pins and strips the puck on the boards`,
+        (p, a) => `hard-nosed battle won in the corner by ${p}`,
+        (p, a) => `${p} comes away with the biscuit along the glass`,
+        (p, a) => `pure determination by ${p} digging the puck out`,
+        (p, a) => `${p} protects the puck and escapes the corner`
+      ,
+        (p, a) => `${p} ties up the man and kicks the puck out to open ice`,
+        (p, a) => `heavy forecheck pressure: ${p} separates man from puck along the wall`,
+        (p, a) => `${p} muscles the defender and shields the biscuit`,
+        (p, a) => `relentless corner battle won cleanly by ${p}`,
+        (p, a) => `${p} uses the skates to control the puck along the boards`,
+        (p, a) => `tenacious puck hunt by ${p} winning possession in the corner`
+      ],
+      'setup-coast-to-coast': [
+        (p, a) => `${p} takes the puck end-to-end with blistering speed`,
+        (p, a) => `unreal coast-to-coast rush by ${p} splitting the defense`,
+        (p, a) => `${p} goes 200 feet from behind our goal line all the way into their zone`,
+        (p, a) => `end-to-end beauty by ${p} turning on the afterburners`,
+        (p, a) => `${p} flies coast-to-coast through three defenders`,
+        (p, a) => `sensational individual effort as ${p} carries it the full length of the sheet`,
+        (p, a) => `${p} winds up behind our net and goes coast-to-coast`,
+        (p, a) => `${p} weaves through neutral ice on a thrilling end-to-end rush`,
+        (p, a) => `dazzling coast-to-coast rush by ${p} beating everyone with speed`,
+        (p, a) => `${p} takes off like a rocket from our end all the way deep into the attack`,
+        (p, a) => `pure skating clinic: ${p} goes end-to-end with the puck on a string`,
+        (p, a) => `${p} blows past the forecheck and carries it 200 feet coast-to-coast`
+      ],
+      'setup-give-and-go': [
+        (p, a) => a ? `textbook give-and-go between ${p} and ${a}` : `slick give-and-go passing play executed by ${p}`,
+        (p, a) => a ? `${p} dishes to ${a}, drives the net and gets it right back` : `${p} executes a clean give-and-go entry`,
+        (p, a) => a ? `crisp give-and-go clinic by ${p} and ${a} catching the defense flat-footed` : `give-and-go rush by ${p}`,
+        (p, a) => a ? `${a} hits ${p} in stride on a lightning give-and-go` : `${p} works a fast give-and-go into the zone`,
+        (p, a) => a ? `tape-to-tape give-and-go: ${p} to ${a} and back to ${p}` : `smooth give-and-go transition by ${p}`,
+        (p, a) => a ? `give-and-go magic between ${p} and ${a} opening up ice` : `give-and-go rush executed to perfection by ${p}`,
+        (p, a) => a ? `${p} dishes to ${a} and flies into open ice for the return pass` : `${p} uses a quick give-and-go to create space`,
+        (p, a) => a ? `gorgeous give-and-go sequence orchestrated by ${p} and ${a}` : `rapid give-and-go rush led by ${p}`,
+        (p, a) => a ? `${p} works the give-and-go with ${a} to split the coverage` : `heads-up give-and-go play by ${p}`,
+        (p, a) => a ? `rapid-fire give-and-go: ${a} returns it right onto ${p}'s blade` : `clean give-and-go sequence by ${p}`
+      ],
+      'setup-screen-traffic': [
+        (p, a) => `${p} parks right in the blue paint setting a heavy screen`,
+        (p, a) => `perfect net-front screen by ${p} taking away the goalie's eyes`,
+        (p, a) => `${p} battles for net-front real estate, screening the netminder`,
+        (p, a) => `textbook screen in front of the cage by ${p}`,
+        (p, a) => `${p} plants right in front of the goalie, creating heavy traffic`,
+        (p, a) => `${p} absorbs the cross-checks in front and provides the screen`,
+        (p, a) => `fearless net-front presence: ${p} completely blocks the goalie's vision`,
+        (p, a) => `${p} creates chaos in the blue paint with a relentless screen`,
+        (p, a) => `${p} screens the netminder right at the top of the crease`,
+        (p, a) => `heavy traffic in front created by ${p} standing tall in the slot`
+      ],
+
+      // HUSTLE & GRIND
+      'hustle-backcheck': [
+        (p, a) => `huge backcheck by ${p} to strip the puck and negate a breakaway!`,
+        (p, a) => `${p} turns on the jets on the backcheck, lifting the stick cleanly!`,
+        (p, a) => `relentless 200-foot effort by ${p} hunting down the puck carrier!`,
+        (p, a) => `${p} skates miles to break up an odd-man rush from behind!`,
+        (p, a) => `game-saving backcheck by ${p}! Outworking everyone on the ice!`,
+        (p, a) => `pure heart from ${p} tracking back and stripping the puck!`,
+        (p, a) => `${p} hustles back into the play and prevents a prime scoring chance!`,
+        (p, a) => `unreal work ethic by ${p} on the backcheck to break up the attack!`,
+        (p, a) => `speedy backcheck by ${p} shutting down the counter-rush!`,
+        (p, a) => `${p} busts a gut on the backcheck and disrupts the shooter!`
+      ,
+        (p, a) => `pure hustle: ${p} tracks back and lifts the shooter's stick at the dot!`,
+        (p, a) => `${p} covers for a pinching D with a clutch 200-foot backcheck!`,
+        (p, a) => `flying backcheck from ${p} negating an odd-man counter-attack!`,
+        (p, a) => `${p} dives with an outstretched stick to knock the puck off the tape!`,
+        (p, a) => `unselfish team-first hockey: ${p} sprints back to break up the play!`,
+        (p, a) => `${p} hustles deep into our own zone and clears the danger!`
+      ],
+      'hustle-forecheck': [
+        (p, a) => `relentless forecheck by ${p} forcing a huge turnover deep in their zone!`,
+        (p, a) => `${p} hounds the puck on the forecheck and creates a scoring chance!`,
+        (p, a) => `heavy forecheck pressure by ${p} causing chaos behind their net!`,
+        (p, a) => `${p} finishes the check on the forecheck and strips the biscuit!`,
+        (p, a) => `tireless work rate from ${p} on the forecheck turning defense into offense!`,
+        (p, a) => `${p} pressures the defenseman into coughing up the puck!`,
+        (p, a) => `monster forecheck shift by ${p} pinning them deep!`,
+        (p, a) => `${p} refuses to quit on the puck and wins possession on the forecheck!`,
+        (p, a) => `aggressive forechecking by ${p} keeping the pressure buzzing!`,
+        (p, a) => `${p} forces an errant clearing pass with fierce forechecking!`
+      ,
+        (p, a) => `${p} forces an icing with high-tempo forechecking pressure!`,
+        (p, a) => `active stick on the forecheck by ${p} intercepting the breakout pass!`,
+        (p, a) => `${p} pins the defenseman to the glass and forces a turnover!`,
+        (p, a) => `heavy puck pursuit by ${p} giving the defense zero time to breathe!`,
+        (p, a) => `${p} hounds the puck like a heat-seeking missile on the forecheck!`,
+        (p, a) => `smart angling by ${p} cutting off the breakout along the boards!`
+      ],
+      'hustle-draws-penalty': [
+        (p, a) => `${p} drives hard to the net, protects the puck, and draws a penalty! Power play coming up!`,
+        (p, a) => `great speed by ${p} forcing the opponent into taking a penalty!`,
+        (p, a) => `${p} outskates the defense and draws a tripping call!`,
+        (p, a) => `relentless puck protection by ${p} results in a penalty on the opponent!`,
+        (p, a) => `${p} draws a hooking penalty on a strong drive! Man advantage upcoming!`,
+        (p, a) => `opponent had no choice but to take a penalty on ${p}! Power play!`,
+        (p, a) => `${p} draws a holding call with great leg drive!`,
+        (p, a) => `ref's arm goes up as ${p} gets hooked on the rush! Power play upcoming!`,
+        (p, a) => `${p} draws a minor penalty with high-energy hustle!`,
+        (p, a) => `penalty drawn by ${p} after a dominant shift in the offensive zone!`
+      ,
+        (p, a) => `${p} churns the legs, draws a slashing minor in the offensive zone!`,
+        (p, a) => `power forward move: ${p} protects the puck and forces a hook!`,
+        (p, a) => `${p} forces an interference call with quick acceleration!`,
+        (p, a) => `ref puts the whistle to the mouth as ${p} gets tripped on the rush!`,
+        (p, a) => `${p} battles through contact and draws a 2-minute minor!`,
+        (p, a) => `opponent caught out of position, commits a penalty against ${p}!`
+      ],
+      'hustle-faceoff-win': [
+        (p, a) => `clean defensive zone faceoff win by ${p} to relieve pressure!`,
+        (p, a) => `${p} wins a critical offensive zone draw cleanly back to the point!`,
+        (p, a) => `clutch faceoff victory by ${p} on the penalty kill!`,
+        (p, a) => `${p} out-battles the opposing centerman for a clean draw win!`,
+        (p, a) => `quick hands in the circle by ${p} winning possession cleanly!`,
+        (p, a) => `${p} snaps the draw back right onto the tape!`,
+        (p, a) => `huge faceoff win in our end by ${p}!`,
+        (p, a) => `${p} wins the puck on the tie-up with great strength!`,
+        (p, a) => `clean faceoff win by ${p} setting up offensive zone possession!`,
+        (p, a) => `${p} comes through with a clutch draw win under pressure!`
+      ,
+        (p, a) => `faceoff win by ${p} off the tie-up with quick skate work!`,
+        (p, a) => `${p} wins a clutch neutral-zone faceoff cleanly!`,
+        (p, a) => `quick draw victory by ${p} starting the breakout instantly!`,
+        (p, a) => `${p} dominates the circle, winning the draw straight back!`,
+        (p, a) => `forehand draw won cleanly by ${p} at the dot!`,
+        (p, a) => `${p} wins the faceoff battle and protects possession!`
+      ],
+      'hustle-net-drive': [
+        (p, a) => `${p} with a powerful drive to the net, bowling through traffic!`,
+        (p, a) => `${p} drops the shoulder and drives hard to the crease!`,
+        (p, a) => `fearless drive to the blue paint by ${p} creating chaos in front!`,
+        (p, a) => `${p} cuts hard to the net with a defender on the hip!`,
+        (p, a) => `strong net drive by ${p} generating a dangerous chance!`,
+        (p, a) => `${p} uses pure strength to take the puck straight to the cage!`,
+        (p, a) => `hard power move to the net by ${p}!`,
+        (p, a) => `${p} muscles past the defenseman straight towards the crease!`,
+        (p, a) => `direct drive to the house by ${p}!`,
+        (p, a) => `${p} attacks the middle of the ice and drives the goalie!`
+      ,
+        (p, a) => `${p} cuts across the top of the crease with full power!`,
+        (p, a) => `fearless puck carrier: ${p} crashes the net through the defense!`,
+        (p, a) => `${p} uses the frame to shield the puck and drives the crease!`,
+        (p, a) => `direct, aggressive net drive by ${p} causing chaos in front!`,
+        (p, a) => `${p} powers around the corner and charges the blue paint!`,
+        (p, a) => `unapologetic net-front drive by ${p} forcing the goalie to freeze!`
+      ],
+
+      // FINISHES (GOALS)
+      'goal-buries-it': [
+        (p, a, s) => a ? `and ${p} buries it in the back of the net from ${a}! ${s}` : `and ${p} buries it in the back of the net! ${s}`,
+        (p, a, s) => a ? `and ${p} puts it away with authority off the setup from ${a}! ${s}` : `and ${p} puts it away with authority! ${s}`,
+        (p, a, s) => a ? `and ${p} lights the lamp off the dish from ${a}! ${s}` : `and ${p} lights the lamp! ${s}`,
+        (p, a, s) => a ? `and ${p} tucks it home off the feed from ${a}! What a play! ${s}` : `and ${p} tucks it home! What a play! ${s}`,
+        (p, a, s) => a ? `and ${p} deposits the pass from ${a} into the twine! ${s}` : `and ${p} deposits it into the twine! ${s}`,
+        (p, a, s) => a ? `and ${p} makes no mistake off ${a}'s pass, burying it clean! ${s}` : `and ${p} makes no mistake, burying it clean! ${s}`,
+        (p, a, s) => a ? `and ${p} finishes with ice in the veins after ${a}'s setup! ${s}` : `and ${p} finishes with ice in the veins! ${s}`,
+        (p, a, s) => a ? `and ${p} scores on the feed from ${a}! The crowd goes wild! ${s}` : `and ${p} scores! The crowd goes wild! ${s}`,
+        (p, a, s) => a ? `and ${p} hammers ${a}'s pass into the open net! ${s}` : `and ${p} hammers it into the open net! ${s}`,
+        (p, a, s) => a ? `and ${p} finds the back of the net from ${a}! Total beauty! ${s}` : `and ${p} finds the back of the net! Total beauty! ${s}`
+      ,
+        (p, a, s) => a ? `and ${p} lights the lamp with authority off the feed from ${a}! ${s}` : `and ${p} lights the lamp with authority! ${s}`,
+        (p, a, s) => a ? `and ${p} cashes in off the tape-to-tape dish from ${a}! ${s}` : `and ${p} cashes in! What a finish! ${s}`,
+        (p, a, s) => a ? `and ${p} pulls the trigger off ${a}'s setup and scores! ${s}` : `and ${p} pulls the trigger and scores! ${s}`,
+        (p, a, s) => a ? `and ${p} rings up the scoreboard off ${a}'s feed! ${s}` : `and ${p} rings up the scoreboard! ${s}`,
+        (p, a, s) => a ? `and ${p} tucks it into the mesh after ${a}'s brilliant play! ${s}` : `and ${p} tucks it cleanly into the mesh! ${s}`,
+        (p, a, s) => a ? `and ${p} converts with ice-cold poise on the feed from ${a}! ${s}` : `and ${p} converts with ice-cold poise! ${s}`
+      ],
+      'goal-top-shelf': [
+        (p, a, s) => a ? `and ${p} snipes it top shelf off the dish from ${a}! Where mama keeps the peanut butter! ${s}` : `and ${p} snipes it top shelf where mama keeps the peanut butter! ${s}`,
+        (p, a, s) => a ? `and ${p} takes the feed from ${a} and goes top cheddar! Pure snipe! ${s}` : `and ${p} goes top cheddar over the blocker! Pure snipe! ${s}`,
+        (p, a, s) => `and ${p} shelves it under the crossbar! What a shot! ${s}`,
+        (p, a, s) => `and ${p} picks the top corner clean! Goalie had no chance! ${s}`,
+        (p, a, s) => `and ${p} rips an absolute laser top shelf! ${s}`,
+        (p, a, s) => `and ${p} snipes top corner, popping the water bottle! ${s}`,
+        (p, a, s) => `and ${p} roofs the backhander into the top net! ${s}`,
+        (p, a, s) => `and ${p} wires a rocket top corner! What a release! ${s}`,
+        (p, a, s) => `and ${p} snipes upper 90 with pinpoint accuracy! ${s}`,
+        (p, a, s) => `and ${p} goes top shelf with absolute venom! ${s}`
+      ,
+        (p, a, s) => a ? `and ${p} goes top cheddar where the peanut butter sits off the feed from ${a}! ${s}` : `and ${p} goes top cheddar over the glove! ${s}`,
+        (p, a, s) => a ? `and ${p} snipes the water bottle right off the net from ${a}! ${s}` : `and ${p} pops the water bottle off the net! Laser snipe! ${s}`,
+        (p, a, s) => a ? `and ${p} picks the top corner with a wicked wrister from ${a}! ${s}` : `and ${p} wires a wicked wrister top corner! ${s}`,
+        (p, a, s) => a ? `and ${p} shelves it upstairs off ${a}'s pass! Absolute cannon! ${s}` : `and ${p} shelves it upstairs! Absolute cannon! ${s}`,
+        (p, a, s) => a ? `and ${p} snipes the top corner over the shoulder from ${a}! ${s}` : `and ${p} snipes over the goalie's shoulder! Pure sniper! ${s}`,
+        (p, a, s) => a ? `and ${p} puts a laser in the top drawer from ${a}! ${s}` : `and ${p} puts a laser right into the top drawer! ${s}`
+      ],
+      'goal-bangs-home': [
+        (p, a, s) => a ? `and ${p} bangs home the rebound after the shot by ${a}! ${s}` : `and ${p} bangs home the rebound in the crease! ${s}`,
+        (p, a, s) => `and ${p} pokes the loose puck over the goal line! ${s}`,
+        (p, a, s) => `and ${p} cleans up the trash in front of the net! ${s}`,
+        (p, a, s) => `and ${p} outworks everyone in the blue paint for the goal! ${s}`,
+        (p, a, s) => a ? `and ${p} jumps on the rebound from ${a}'s drive and buries it! ${s}` : `and ${p} jumps on the rebound and buries it! ${s}`,
+        (p, a, s) => `and ${p} shovels home the second chance puck! ${s}`,
+        (p, a, s) => `and ${p} crashes the crease and jams it home! ${s}`,
+        (p, a, s) => `and ${p} stays hungry in front to poke it in! ${s}`,
+        (p, a, s) => `and ${p} wins the goalmouth scramble and scores! ${s}`,
+        (p, a, s) => `and ${p} hammers the loose puck across the red line! ${s}`
+      ,
+        (p, a, s) => a ? `and ${p} pounces on the rebound off ${a}'s shot and buries it! ${s}` : `and ${p} pounces on the rebound and buries it! ${s}`,
+        (p, a, s) => a ? `and ${p} cashes in the second chance off ${a}'s drive! ${s}` : `and ${p} cashes in on the second-chance rebound! ${s}`,
+        (p, a, s) => a ? `and ${p} wins the crease battle to tuck in the loose puck from ${a}! ${s}` : `and ${p} wins the crease battle and tucks in the loose puck! ${s}`,
+        (p, a, s) => a ? `and ${p} shovels in the rebound through traffic after ${a}'s blast! ${s}` : `and ${p} shovels the rebound through traffic! ${s}`,
+        (p, a, s) => a ? `and ${p} stays with the play, jamming home the loose puck from ${a}! ${s}` : `and ${p} stays hungry on the doorstep and jams it home! ${s}`,
+        (p, a, s) => a ? `and ${p} buries the loose biscuit in the crease off ${a}'s initial attempt! ${s}` : `and ${p} buries the loose biscuit in the crease! ${s}`
+      ],
+      'goal-bar-down': [
+        (p, a, s) => `and ${p} goes BAR DOWN! PING and in! ${s}`,
+        (p, a, s) => `and ${p} rings it off the crossbar and straight in! Absolute missile! ${s}`,
+        (p, a, s) => `and ${p} with the bar-down rocket! You could hear that ping everywhere! ${s}`,
+        (p, a, s) => `and ${p} goes iron and in! Unstoppable clapper! ${s}`,
+        (p, a, s) => `and ${p} snipes it off the crossbar for the score! ${s}`,
+        (p, a, s) => `and ${p} strikes iron, off the bar and in! ${s}`,
+        (p, a, s) => `and ${p} goes crossbar-in! Absolute rocket shot! ${s}`,
+        (p, a, s) => `and ${p} rings the bell! Off the crossbar and down! ${s}`,
+        (p, a, s) => `and ${p} puts a hole in the twine bar-down! ${s}`,
+        (p, a, s) => `and ${p} goes iron-in! What a blast! ${s}`
+      ,
+        (p, a, s) => `and ${p} rings the crossbar and in! What a sound! ${s}`,
+        (p, a, s) => `and ${p} fires a missile off the iron and in! Twine ripper! ${s}`,
+        (p, a, s) => `and PING! ${p} goes crossbar-down! Pure highlight reel! ${s}`,
+        (p, a, s) => `and ${p} hits the iron, down into the net! Unstoppable! ${s}`,
+        (p, a, s) => `and ${p} rings the bell bar-down! Absolute laser beam! ${s}`,
+        (p, a, s) => `and ${p} wires it off the crossbar and straight into the twine! ${s}`
+      ],
+      'goal-one-timer': [
+        (p, a, s) => a ? `and ${p} connects on a laser one-timer off the cross-ice feed from ${a}! ${s}` : `and ${p} unleashes a blistering one-timer into the mesh! ${s}`,
+        (p, a, s) => `and ${p} drops to one knee and hammers a one-timer goal! ${s}`,
+        (p, a, s) => `and ${p} claps a heavy one-timer past the sliding goalie! ${s}`,
+        (p, a, s) => a ? `and ${p} one-times the pass from ${a} straight into the net! ${s}` : `and ${p} rips a one-timer laser into the back of the net! ${s}`,
+        (p, a, s) => `and ${p} connects on a cannon of a one-timer! ${s}`,
+        (p, a, s) => `and ${p} blasts a one-timer strike! Pure power! ${s}`,
+        (p, a, s) => `and ${p} catches it flush with a one-timer finish! ${s}`,
+        (p, a, s) => `and ${p} tees off on a wicked one-timer! Goal! ${s}`,
+        (p, a, s) => `and ${p} hammers home the one-timer! No chance for the goalie! ${s}`,
+        (p, a, s) => `and ${p} one-times a missile into the twine! ${s}`
+      ,
+        (p, a, s) => a ? `and ${p} connects on a cannon of a one-timer off ${a}'s dish! ${s}` : `and ${p} connects on a cannon of a one-timer! ${s}`,
+        (p, a, s) => a ? `and ${p} rips a blistering one-timer into the mesh from ${a}! ${s}` : `and ${p} rips a blistering one-timer into the mesh! ${s}`,
+        (p, a, s) => a ? `and ${p} drops down and claps a one-timer past the goalie from ${a}! ${s}` : `and ${p} claps a heavy one-timer past the goalie! ${s}`,
+        (p, a, s) => a ? `and ${p} hammers home the seam pass from ${a} with a one-timer! ${s}` : `and ${p} hammers home the one-timer with authority! ${s}`,
+        (p, a, s) => a ? `and ${p} tees off on a wicked one-timer from ${a}! Light the lamp! ${s}` : `and ${p} tees off on a wicked one-timer! Light the lamp! ${s}`,
+        (p, a, s) => a ? `and ${p} uncorks an absolute laser one-timer from ${a}! ${s}` : `and ${p} uncorks an absolute laser one-timer! ${s}`
+      ],
+      'goal-five-hole': [
+        (p, a, s) => `and ${p} slides it five-hole for the goal! ${s}`,
+        (p, a, s) => `and ${p} slips the puck right between the wickets! ${s}`,
+        (p, a, s) => `and ${p} outwaits the goalie and goes five-hole! ${s}`,
+        (p, a, s) => `and ${p} tricks the netminder five-hole! Smooth finish! ${s}`,
+        (p, a, s) => `and ${p} slides it right through the pads! Five-hole goal! ${s}`,
+        (p, a, s) => `and ${p} deceives the goalie and tucks it five-hole! ${s}`,
+        (p, a, s) => `and ${p} finds the five-hole opening cleanly! ${s}`,
+        (p, a, s) => `and ${p} slips it between the goalie's legs for the marker! ${s}`,
+        (p, a, s) => `and ${p} scores five-hole on a heads-up play! ${s}`,
+        (p, a, s) => `and ${p} drives hard and trickles it five-hole! ${s}`
+      ,
+        (p, a, s) => `and ${p} changes the angle and slips it five-hole! ${s}`,
+        (p, a, s) => `and ${p} deceives the goalie and trickles it between the pads! ${s}`,
+        (p, a, s) => `and ${p} slides the puck through the wickets with pure poise! ${s}`,
+        (p, a, s) => `and ${p} outwaits the butterfly and goes five-hole! ${s}`,
+        (p, a, s) => `and ${p} slides it low and clean through the pads! Goal! ${s}`,
+        (p, a, s) => `and ${p} snaps a low drive right through the wickets! ${s}`
+      ],
+      'goal-empty-net': [
+        (p, a, s) => `and ${p} seals the game with the empty-net dagger! ${s}`,
+        (p, a, s) => `and ${p} sends it down the ice into the open cage! That'll do it! ${s}`,
+        (p, a, s) => `and ${p} hits the empty net from neutral ice! Game iced! ${s}`,
+        (p, a, s) => `and ${p} walks it into the empty net to lock down the win! ${s}`,
+        (p, a, s) => `and ${p} flips it into the vacant cage! The dagger! ${s}`,
+        (p, a, s) => `and ${p} puts the final nail in with the empty netter! ${s}`,
+        (p, a, s) => `and ${p} caps off the victory with an empty-net marker! ${s}`,
+        (p, a, s) => `and ${p} skates it into the open net! Outstanding game! ${s}`,
+        (p, a, s) => `and ${p} clears it into the open net to guarantee the victory! ${s}`,
+        (p, a, s) => `and ${p} buries the empty-net insurance goal! ${s}`
+      ,
+        (p, a, s) => `and ${p} flips the biscuit all the way down the sheet into the open cage! ${s}`,
+        (p, a, s) => `and ${p} secures the victory with a clean empty-net strike! ${s}`,
+        (p, a, s) => `and ${p} outraces the defense and slides it into the vacant net! ${s}`,
+        (p, a, s) => `and ${p} puts the game on ice with the empty netter! ${s}`,
+        (p, a, s) => `and ${p} deposits the puck into the empty net from centre ice! ${s}`,
+        (p, a, s) => `and ${p} delivers the insurance dagger into the open cage! ${s}`
+      ],
+      'goal-tip-in': [
+        (p, a, s) => a ? `and ${p} redirects the point drive from ${a} into the top corner! ${s}` : `and ${p} gets a stick on the shot for a gorgeous deflection goal! ${s}`,
+        (p, a, s) => a ? `and ${p} tips the shot from ${a} right past the screened netminder! ${s}` : `and ${p} with incredible hand-eye coordination tips it in! ${s}`,
+        (p, a, s) => a ? `and silky redirection! ${p} deflects ${a}'s drive under the crossbar! ${s}` : `and ${p} redirects the puck past the goalie! Pure skill! ${s}`,
+        (p, a, s) => a ? `and ${p} gets a piece of ${a}'s shot in front for the goal! ${s}` : `and ${p} gets the blade on the biscuit for a clutch deflection! ${s}`,
+        (p, a, s) => a ? `and point shot by ${a} tipped in front by ${p} into the twine! ${s}` : `and ${p} knocks down the drive and deflects it over the pad! ${s}`,
+        (p, a, s) => a ? `and ${p} changes the angle with a tip on ${a}'s blast! Goalie had no chance! ${s}` : `and ${p} with a textbook net-front redirection for the score! ${s}`,
+        (p, a, s) => a ? `and deflection beauty! ${p} tips the feed from ${a} into the mesh! ${s}` : `and ${p} tips it five-hole off the point shot! ${s}`,
+        (p, a, s) => a ? `and ${p} with the mid-air tip off ${a}'s cannon! What hands! ${s}` : `and ${p} redirects the puck cleanly into the back of the net! ${s}`,
+        (p, a, s) => a ? `and ${p} parks in the slot and redirects ${a}'s shot home! ${s}` : `and ${p} with a silky redirect in the slot! Goal! ${s}`,
+        (p, a, s) => a ? `and ${p} deflects the drive from ${a} right under the bar! ${s}` : `and ${p} tips it home through heavy traffic! ${s}`
+      ],
+      'goal-breakaway-deke': [
+        (p, a, s) => a ? `and sprung by ${a}, ${p} comes in all alone on the breakaway, freezes the goalie, and buries it! ${s}` : `and in all alone! ${p} makes a filthy deke on the breakaway and tucks it home! ${s}`,
+        (p, a, s) => a ? `and breakaway perfection! ${p} takes ${a}'s outlet pass, goes forehand-backhand and scores! ${s}` : `and ${p} goes forehand-backhand on the breakaway and slides it five-hole! ${s}`,
+        (p, a, s) => `and ice in the veins! ${p} walks in all alone on a breakaway, outwaits the netminder and tucks it in! ${s}`,
+        (p, a, s) => `and ${p} bursts through the defense with speed and shelves the breakaway finish! ${s}`,
+        (p, a, s) => `and highlight reel breakaway! ${p} sells the shot, dekes to the backhand and deposits it! ${s}`,
+        (p, a, s) => `and stone-cold finish on the breakaway by ${p}! Complete composure! ${s}`,
+        (p, a, s) => `and ${p} in all alone on the goalie, makes a nasty move and tucks it around the pad! ${s}`,
+        (p, a, s) => `and ${p} breaks away with speed, cuts across the crease and slides it home! ${s}`,
+        (p, a, s) => `and silky breakaway move by ${p}! Netminder went down and ${p} went upstairs! ${s}`,
+        (p, a, s) => `and clean breakaway finish! ${p} outwaits the paddle and flips it home! ${s}`
+      ],
+      'goal-backhand-roof': [
+        (p, a, s) => a ? `and ${p} cuts across the crease on ${a}'s feed and roofs the backhand over the shoulder! ${s}` : `and ${p} cuts to the backhand and shelves it under the crossbar! ${s}`,
+        (p, a, s) => a ? `and silky hands! ${p} takes the dish from ${a} and flips a backhand roof job! ${s}` : `and ${p} flips a filthy backhander right under the crossbar! What a touch! ${s}`,
+        (p, a, s) => a ? `and ${p} protects the puck from ${a}, walks in, and roofs the backhander! ${s}` : `and ${p} protects the puck, cuts across the slot and roofs the backhand! ${s}`,
+        (p, a, s) => `and absolute filth! ${p} cuts across the blue paint and roofs the backhander! ${s}`,
+        (p, a, s) => `and ${p} goes backhand top shelf over the blocker! Pure skill! ${s}`,
+        (p, a, s) => `and ${p} shows off the silky mitts, cutting to the backhand and shelving it! ${s}`,
+        (p, a, s) => `and backhand roof job by ${p}! Netminder had zero chance! ${s}`,
+        (p, a, s) => `and ${p} protects the biscuit, turns inside, and roofs the backhand! ${s}`,
+        (p, a, s) => `and ${p} flips a backhander into the upper 90! Highlight-reel finish! ${s}`,
+        (p, a, s) => `and ${p} outwaits the poke check, cuts backhand and shelves it! ${s}`
+      ],
+      'goal-wraparound': [
+        (p, a, s) => `and ${p} wheels around the cage and tucks the sneaky wraparound on the far post! ${s}`,
+        (p, a, s) => `and caught the goalie napping! ${p} executes a lightning-quick wraparound goal! ${s}`,
+        (p, a, s) => `and ${p} uses great speed behind the net and stuffs the wraparound past the pad! ${s}`,
+        (p, a, s) => `and wraparound beauty! ${p} circles the cage and tucks it before the goalie can slide! ${s}`,
+        (p, a, s) => `and ${p} beats the goaltender to the far pipe on the quick wraparound! ${s}`,
+        (p, a, s) => `and sneaky stuff-in! ${p} jams the wraparound right inside the post! ${s}`,
+        (p, a, s) => `and ${p} curls around the net with pace and slips the wraparound home! ${s}`,
+        (p, a, s) => `and ${p} banks in the wraparound off the goalie's skate! Heads-up play! ${s}`,
+        (p, a, s) => `and fast wraparound executed to perfection by ${p}! Inside the pipe! ${s}`,
+        (p, a, s) => `and ${p} circles the net, beats the slide, and tucks the wraparound! ${s}`
+      ],
+      'goal-point-blast': [
+        (p, a, s) => a ? `and ${p} receives the pass from ${a} and unloads an absolute missile from the point! ${s}` : `and BOOM! ${p} unloads a heavy point blast through traffic into the net! ${s}`,
+        (p, a, s) => a ? `and ${p} walks the line off ${a}'s dish and hammers a bomb into the mesh! ${s}` : `and ${p} blasts a cannon from the blue line right through a screen! ${s}`,
+        (p, a, s) => a ? `and D-man blast! ${p} tees off on ${a}'s pass with a heavy slapper! ${s}` : `and ${p} unleashes an absolute cannon from the point! Twine ripper! ${s}`,
+        (p, a, s) => `and ${p} hammers a heavy drive from the blue line that finds eyes through traffic! ${s}`,
+        (p, a, s) => `and thunderous point shot by ${p} beating the screened goaltender cleanly! ${s}`,
+        (p, a, s) => `and ${p} walks the blue line and wires a low heavy drive into the bottom corner! ${s}`,
+        (p, a, s) => `and point blast! ${p} leans into a heavy slapshot that rips into the net! ${s}`,
+        (p, a, s) => `and ${p} unloads from distance! Missile from the blue line finds the mesh! ${s}`,
+        (p, a, s) => `and absolute rocket from the point by ${p}! Goalie never saw it through the screen! ${s}`,
+        (p, a, s) => `and ${p} claps a heavy bomb from the point! Nothing but net! ${s}`
+      ],
+
+      // PENALTIES
+      'pen-pp-start': [
+        (p, a, s) => `⚡ Power Play for our team! Let's capitalize boys! (${s})`,
+        (p, a, s) => `⚡ Penalty called against opponent! Heading to the man advantage! (${s})`,
+        (p, a, s) => `⚡ Man advantage coming up for our team! Let's get the cycle going! (${s})`,
+        (p, a, s) => `⚡ Opponent off to the box! Huge power play opportunity! (${s})`,
+        (p, a, s) => `⚡ Whistle blows, opponent heading to the penalty box! Power play time! (${s})`,
+        (p, a, s) => `⚡ Power play unit hitting the ice! Let's light the lamp! (${s})`,
+        (p, a, s) => `⚡ 5-on-4 hockey coming up for our team! Let's go! (${s})`,
+        (p, a, s) => `⚡ Ref's arm is up: power play for our team! (${s})`,
+        (p, a, s) => `⚡ Man advantage! Big chance to swing momentum! (${s})`,
+        (p, a, s) => `⚡ Opponent gets 2 minutes, our boys on the power play! (${s})`
+      ,
+        (p, a, s) => `⚡ Man advantage unit on the ice! Let's get to work! (${s})`,
+        (p, a, s) => `⚡ Power play time! Great chance to take control of this game! (${s})`,
+        (p, a, s) => `⚡ Opponent called for a minor! Power play for our team! (${s})`,
+        (p, a, s) => `⚡ Puck in their end: 5-on-4 power play coming up! (${s})`,
+        (p, a, s) => `⚡ Man advantage! Time to move the biscuit and set up the cycle! (${s})`
+      ],
+      'pen-5on3': [
+        (p, a, s) => `🔥 5-ON-3 TWO-MAN ADVANTAGE!! Opponent takes another penalty! Massive opportunity! (${s})`,
+        (p, a, s) => `🔥 5-on-3 power play for our team! Two opponents in the box! Let's bury one! (${s})`,
+        (p, a, s) => `🔥 Golden opportunity! 5-on-3 man advantage! Puck movement needs to be crisp! (${s})`,
+        (p, a, s) => `🔥 Another penalty against the opponent! We have a 5-on-3 for over a minute! (${s})`,
+        (p, a, s) => `🔥 Two-man advantage! 5 skaters against 3! Total offensive zone siege! (${s})`,
+        (p, a, s) => `🔥 5-on-3 hockey! Big chance to blow this game wide open! (${s})`,
+        (p, a, s) => `🔥 Two men in the box for the opponent! 5-on-3 power play unit is out! (${s})`,
+        (p, a, s) => `🔥 5-on-3 advantage! Coach draws up the play! Let's light the lamp! (${s})`,
+        (p, a, s) => `🔥 Two-man advantage! Relentless pressure coming on the 5-on-3! (${s})`,
+        (p, a, s) => `🔥 5-on-3 Power Play! Crowd is on their feet! Let's get that biscuit in the net! (${s})`
+      ,
+        (p, a, s) => `🔥 5-on-3 advantage! Pure shooting gallery time! (${s})`,
+        (p, a, s) => `🔥 Two men up! 5-on-3 power play! Let's capitalize on this golden chance! (${s})`,
+        (p, a, s) => `🔥 Opponent in serious penalty trouble! 5-on-3 advantage for our boys! (${s})`,
+        (p, a, s) => `🔥 5-on-3 for over a minute! Move the puck, find the lane! (${s})`,
+        (p, a, s) => `🔥 Huge special teams moment: 5-on-3 advantage for our team! (${s})`
+      ],
+      'pen-pk-start': [
+        (p, a, s) => `🛡️ Penalty against ${p}. Heading to the penalty kill. Dig in boys! (${s})`,
+        (p, a, s) => `🛡️ ${p} heading to the box. Big penalty kill needed here! (${s})`,
+        (p, a, s) => `🛡️ Man down for our team as ${p} gets 2 minutes. Let's kill this off! (${s})`,
+        (p, a, s) => `🛡️ Short-handed situation as ${p} is called for a minor. Lock it down! (${s})`,
+        (p, a, s) => `🛡️ Whistle against ${p}. PK unit on the ice! Clear the puck! (${s})`,
+        (p, a, s) => `🛡️ Penalty kill time for our team. Big blocks and smart clears needed! (${s})`,
+        (p, a, s) => `🛡️ Tough call against ${p}. Let's kill this penalty off! (${s})`,
+        (p, a, s) => `🛡️ 4-on-5 hockey. Time for our penalty killers to step up! (${s})`,
+        (p, a, s) => `🛡️ ${p} off for 2 minutes. Dig deep on the PK! (${s})`,
+        (p, a, s) => `🛡️ Heading to the penalty kill. Stay disciplined and protect the house! (${s})`
+      ,
+        (p, a, s) => `🛡️ Minor penalty assessed against ${p}. Big PK needed here! (${s})`,
+        (p, a, s) => `🛡️ ${p} whistled off. Penalty kill unit takes the ice! Let's kill it off! (${s})`,
+        (p, a, s) => `🛡️ Short-handed situation: ${p} gets 2 in the box. Stand tall boys! (${s})`,
+        (p, a, s) => `🛡️ Penalty against ${p}. Time for big blocks and crisp clears! (${s})`,
+        (p, a, s) => `🛡️ Man down hockey as ${p} serves a minor. Dig in on the PK! (${s})`
+      ],
+      'pen-3on5': [
+        (p, a, s) => `🛡️ 3-ON-5 PENALTY KILL! Another penalty against our team. Two men down! Dig deep boys! (${s})`,
+        (p, a, s) => `🛡️ Tough situation: heading to a 3-on-5 penalty kill. Need huge blocks and smart clears! (${s})`,
+        (p, a, s) => `🛡️ Two players in our box. 3-on-5 short-handed battle! Stand tall! (${s})`,
+        (p, a, s) => `🛡️ 3-on-5 penalty kill! Triangle defense in front of our goalie! Weather the storm! (${s})`,
+        (p, a, s) => `🛡️ Down two skaters! Massive test for our 3 penalty killers and netminder! (${s})`,
+        (p, a, s) => `🛡️ 3-on-5 penalty kill time. Eat pucks, clear the glass, protect the house! (${s})`,
+        (p, a, s) => `🛡️ 3-on-5 disadvantage! Full grit and heart needed here! (${s})`,
+        (p, a, s) => `🛡️ Crucial 3-on-5 penalty kill. Let's kill off this two-man disadvantage! (${s})`,
+        (p, a, s) => `🛡️ 3-on-5 hockey. Sacrifice the body and clear the zone! (${s})`,
+        (p, a, s) => `🛡️ Two-man penalty kill! Huge cheer from our bench to fire up the 3 killers! (${s})`
+      ,
+        (p, a, s) => `🛡️ 3-on-5 penalty kill! Full heart and courage on the ice right now! (${s})`,
+        (p, a, s) => `🛡️ Down two men: 3-on-5 penalty kill. Clear the puck at every chance! (${s})`,
+        (p, a, s) => `🛡️ Tough spot: 3-on-5 short-handed battle! Stand tall netminder and killers! (${s})`,
+        (p, a, s) => `🛡️ 3-on-5 disadvantage! Time for the penalty killers to dig deep! (${s})`,
+        (p, a, s) => `🛡️ Two in the box for our team. 3-on-5 penalty kill under heavy siege! (${s})`
+      ],
+      'pen-4on4': [
+        (p, a, s) => `⚡ 4-on-4 hockey! Coincidental minors called. Lots of open ice out there! (${s})`,
+        (p, a, s) => `⚡ Matching penalties! Heading to 4-on-4 play. Time to use our speed! (${s})`,
+        (p, a, s) => `⚡ 4 skaters aside! Plenty of room to skate on both ends! (${s})`,
+        (p, a, s) => `⚡ Ref sends one off from each team. 4-on-4 for the next 2 minutes! (${s})`,
+        (p, a, s) => `⚡ Open ice 4-on-4 hockey! Watch for odd-man rushes! (${s})`,
+        (p, a, s) => `⚡ Coincidental penalties assessed. 4-on-4 action underway! (${s})`,
+        (p, a, s) => `⚡ 4-on-4 on the ice! Great opportunity for our speedy skaters! (${s})`,
+        (p, a, s) => `⚡ Extra real estate! 4-on-4 hockey after matching roughing calls! (${s})`,
+        (p, a, s) => `⚡ 4-on-4 situation! Puck moving with pace in open ice! (${s})`,
+        (p, a, s) => `⚡ Matching minors: 4-on-4 for two minutes. Let's capitalize on the open ice! (${s})`
+      ,
+        (p, a, s) => `⚡ Coincidental penalties! 4-on-4 hockey with open ice! (${s})`,
+        (p, a, s) => `⚡ 4-on-4 action! Both teams down a man. Lots of speed on display! (${s})`,
+        (p, a, s) => `⚡ Matching minors assessed. 4-on-4 open-ice battle underway! (${s})`,
+        (p, a, s) => `⚡ 4-on-4 for the next 2 minutes! Great chance for odd-man counter rushes! (${s})`,
+        (p, a, s) => `⚡ Open ice 4-on-4 play! Skaters flying out there! (${s})`
+      ],
+      'pen-pk-killed': [
+        (p, a, s) => `✅ Huge penalty kill! Fantastic discipline and clears on the PK! Back to even strength!`,
+        (p, a, s) => `✅ Penalty killed off! Great battle by the PK unit! Full strength!`,
+        (p, a, s) => `✅ Back to full strength! Great shot blocking on that penalty kill!`,
+        (p, a, s) => `✅ Penalty over! Momentum boost after a stellar PK!`,
+        (p, a, s) => `✅ Even strength hockey again! Superb effort by the penalty killers!`,
+        (p, a, s) => `✅ Penalty killed! Netminder and PK unit stood tall!`,
+        (p, a, s) => `✅ Back to 5-on-5! Big kill for the boys!`,
+        (p, a, s) => `✅ Killed off cleanly! Great zone exits and hustle on that PK!`,
+        (p, a, s) => `✅ Full strength restored! Tremendous work killing off that penalty!`,
+        (p, a, s) => `✅ Penalty in the books! Back to even strength!`
+      ,
+        (p, a, s) => `✅ Full strength! Great discipline and shot blocking on that penalty kill!`,
+        (p, a, s) => `✅ PK unit does the job! Penalty killed cleanly! Back to 5-on-5!`,
+        (p, a, s) => `✅ Huge sigh of relief: penalty killed off! Momentum swings our way!`,
+        (p, a, s) => `✅ Fantastic short-handed battle! Back to even strength hockey!`,
+        (p, a, s) => `✅ Penalty in the books! Stood tall in front of our goalie on the PK!`
+      ],
+      'pen-tripping': [
+        (p, a) => `tripping penalty called on ${p}`,
+        (p, a) => `${p} whistled for tripping along the boards`,
+        (p, a) => `minor penalty: ${p} heading off 2 minutes for tripping`,
+        (p, a) => `ref calls a trip against ${p}`,
+        (p, a) => `stick gets caught up and ${p} gets 2 for tripping`,
+        (p, a) => `tripping call against ${p} behind the play`,
+        (p, a) => `${p} sent off for a tripping minor`,
+        (p, a) => `2 minutes to ${p} for tripping on the rush`,
+        (p, a) => `tripping infraction called against ${p}`,
+        (p, a) => `${p} gets 2 in the box for tripping`
+      ,
+        (p, a) => `ref blows the whistle, assessing 2 minutes for tripping on ${p}`,
+        (p, a) => `stick between the skates: ${p} called for a tripping minor`,
+        (p, a) => `tripping call goes against ${p} along the boards`,
+        (p, a) => `${p} gets 2 minutes for tripping behind the play`,
+        (p, a) => `minor penalty for tripping called against ${p}`
+      ],
+      'pen-hooking': [
+        (p, a) => `hooking penalty called on ${p}`,
+        (p, a) => `${p} whistled 2 minutes for hooking`,
+        (p, a) => `minor penalty for hooking assessed to ${p}`,
+        (p, a) => `ref's arm goes up for hooking against ${p}`,
+        (p, a) => `${p} gets called for a hook in the neutral zone`,
+        (p, a) => `hooking infraction called on ${p}`,
+        (p, a) => `${p} heading to the box for 2 minutes on a hook`,
+        (p, a) => `tug on the stick, 2 minutes for hooking against ${p}`,
+        (p, a) => `hooking call against ${p} along the wall`,
+        (p, a) => `${p} penalized 2 minutes for hooking`
+      ,
+        (p, a) => `arm goes straight up for hooking against ${p}`,
+        (p, a) => `${p} whistled for a hooking infraction in the neutral zone`,
+        (p, a) => `tug on the hip: 2 minutes for hooking assessed to ${p}`,
+        (p, a) => `hooking penalty called against ${p} along the half-wall`,
+        (p, a) => `${p} sent to the box for 2 minutes on a hooking minor`
+      ],
+      'pen-slashing': [
+        (p, a) => `slashing penalty called on ${p}`,
+        (p, a) => `${p} whistled for a 2-minute slash`,
+        (p, a) => `minor penalty: 2 minutes for slashing to ${p}`,
+        (p, a) => `two-handed slash called against ${p}`,
+        (p, a) => `${p} heading off for a slash on the hands`,
+        (p, a) => `slashing call against ${p} in front of the net`,
+        (p, a) => `stick infraction: 2 minutes for slashing on ${p}`,
+        (p, a) => `${p} whistled for slashing on the breakout`,
+        (p, a) => `ref calls a slashing minor against ${p}`,
+        (p, a) => `${p} sent to the penalty box for slashing`
+      ,
+        (p, a) => `two-handed slash called on ${p}, off for 2 minutes`,
+        (p, a) => `slashing infraction called against ${p} in the slot`,
+        (p, a) => `${p} penalized 2 minutes for a slash on the hands`,
+        (p, a) => `stick check turns into a slashing penalty for ${p}`,
+        (p, a) => `minor penalty for slashing assessed to ${p}`
+      ],
+
+      // DEFENSE
+      'def-poke': [
+        (p, a) => `huge poke check by ${p} to strip the puck cleanly`,
+        (p, a) => `${p} steps up with a timely poke check on the rush`,
+        (p, a) => `${p} breaks up the play with active stick work`,
+        (p, a) => `clean stick-on-puck play by ${p} stripping the carrier`,
+        (p, a) => `${p} with great gap control and a clutch poke check`,
+        (p, a) => `${p} snuffs out the attack with a sharp poke check`,
+        (p, a) => `${p} knocks the puck away before a shot could happen`,
+        (p, a) => `defensive clinic by ${p} using the stick to negate the rush`,
+        (p, a) => `${p} strips the puck and transitions play up ice`,
+        (p, a) => `textbook poke check by ${p} shutting down the rush`
+      ,
+        (p, a) => `${p} with an active stick, poking the puck away in the neutral zone`,
+        (p, a) => `clean poke check by ${p} turning defense into an instant counter-attack`,
+        (p, a) => `${p} tracks the carrier and uses a sharp poke check to deny the zone`,
+        (p, a) => `heads-up poke check from ${p} taking the puck right off the blade`,
+        (p, a) => `${p} steps up at our blue line with a timely, textbook poke check`,
+        (p, a) => `disciplined stick work by ${p} negating a dangerous rush`
+      ],
+      'def-2on1': [
+        (p, a) => `${p} plays the 2-on-1 to perfection and denies the pass`,
+        (p, a) => `${p} goes down on one knee to break up the 2-on-1 rush`,
+        (p, a) => `calm under fire: ${p} takes away the backdoor pass on a 2-on-1`,
+        (p, a) => `${p} reads the 2-on-1 perfectly and intercepts the dish`,
+        (p, a) => `masterful 2-on-1 defense by ${p} forcing the puck wide`,
+        (p, a) => `${p} takes away the passing lane on an odd-man rush`,
+        (p, a) => `poised defensive stop by ${p} completely stalling the 2-on-1`,
+        (p, a) => `${p} breaks up a dangerous 2-on-1 counter-attack`,
+        (p, a) => `${p} angles the attacker off and cancels the 2-on-1 chance`,
+        (p, a) => `huge awareness by ${p} shutting down an odd-man rush`
+      ,
+        (p, a) => `${p} lays the body down to cut off the 2-on-1 backdoor pass!`,
+        (p, a) => `poised defensive coverage by ${p} forcing the 2-on-1 shooter wide!`,
+        (p, a) => `${p} takes away the pass and lets the goalie square up on the 2-on-1!`,
+        (p, a) => `calm as a veteran: ${p} breaks up an odd-man 2-on-1 rush!`,
+        (p, a) => `${p} slides across and blocks the cross-ice pass on a 2-on-1!`,
+        (p, a) => `masterclass 2-on-1 defense by ${p} snuffing out the chance!`
+      ],
+      'def-block': [
+        (p, a) => `${p} drops down for a massive shot block`,
+        (p, a) => `${p} sacrifices the body and blocks a heavy blast`,
+        (p, a) => `standing tall! ${p} eats a rocket from the slot`,
+        (p, a) => `unreal courage by ${p} getting in front of the puck`,
+        (p, a) => `${p} puts the body on the line with a huge block`,
+        (p, a) => `clutch shot block by ${p} taking away a prime chance`,
+        (p, a) => `${p} slides across to absorb the heavy drive`,
+        (p, a) => `big heart shown by ${p} eating a shot from the point`,
+        (p, a) => `${p} gets a piece of the shot to deflect it into the netting`,
+        (p, a) => `defensive grit: ${p} blocks the lane and takes away the shot`
+      ,
+        (p, a) => `${p} drops to one knee and eats a heavy shot from the point!`,
+        (p, a) => `full commitment: ${p} throws the body in front of a blast!`,
+        (p, a) => `${p} gets a piece of the drive to deflect it out of harm's way!`,
+        (p, a) => `huge courage shown by ${p} absorbing a rocket from the slot!`,
+        (p, a) => `${p} blocks the lane and takes away the shooting window cleanly!`,
+        (p, a) => `standing tall on defense: ${p} with a massive shot block!`
+      ],
+      'def-clear': [
+        (p, a) => a ? `${p} calmly hits an outlet pass to ${a} to clear the zone` : `${p} calmly chips the puck off the glass and clears the zone`,
+        (p, a) => `${p} fires a crisp outlet pass to relieve defensive pressure`,
+        (p, a) => `${p} skates it out of danger and clears our end`,
+        (p, a) => `${p} hits an outlet pass right on the tape`,
+        (p, a) => `${p} relieves the siege in our end with a smart flip clear`,
+        (p, a) => `${p} wins the race behind our net and fires it out`,
+        (p, a) => `smooth breakout started by ${p} out of our end`,
+        (p, a) => `${p} chips the puck out of the defensive zone under pressure`,
+        (p, a) => `${p} executes a clean defensive zone exit`,
+        (p, a) => `${p} reverses the puck behind the net and gets the clear`
+      ,
+        (p, a) => a ? `${p} skates it out of the corner and hits ${a} tape-to-tape!` : `${p} skates it out of danger and clears the zone`,
+        (p, a) => `${p} with an intelligent bank pass off the boards to clear our end`,
+        (p, a) => `${p} withstands the heavy forecheck and chips the puck out of the zone`,
+        (p, a) => `clean zone exit initiated by ${p} with poise under pressure`,
+        (p, a) => `${p} reverses behind our net and fires a crisp clear up ice`,
+        (p, a) => `${p} wins the race to the end boards and flips it safely out`
+      ],
+
+      // GOALIE
+      'goalie-change-mid': [
+        (p, a, s, gIn, gOut) => `🧤 Scheduled goalie change midway through the game: ${gIn} takes over in net for ${gOut}! Great first half by ${gOut}! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Goalie split right on schedule: ${gIn} enters between the pipes, replacing ${gOut}. Solid shift by ${gOut}! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Mid-game goalie change for our team: ${gIn} now in net for ${gOut}! Let's keep it rolling! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Halfway mark reached and our goalies make the switch: ${gIn} takes the crease from ${gOut}! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Goalie rotation at the midway point: ${gIn} in for ${gOut}. Fantastic effort in the first half by ${gOut}! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Switch in the crease: ${gIn} takes over for ${gOut} midway through the game! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Planned goalie switch: tap on the pads and ${gIn} takes the net from ${gOut}! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Goalie switch halfway through! ${gIn} is now in net for ${gOut}! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Midway buzzer and ${gIn} takes over between the pipes for ${gOut}! Great battle by ${gOut}! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Split game goalie change: ${gIn} steps into the crease in relief of ${gOut}! (${s})`
+      ,
+        (p, a, s, gIn, gOut) => `🧤 Halfway mark reached! Planned split in net as ${gIn} takes over for ${gOut}! Great shift by ${gOut}! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Scheduled rotation: ${gIn} enters the blue paint in relief of ${gOut}! Solid work by ${gOut}! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Split game goalie change: ${gIn} now between the pipes for ${gOut}! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Tap on the pads and ${gIn} takes over the cage from ${gOut} midway through! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Mid-game goalie switch on schedule: ${gIn} in for ${gOut}! Let's lock it down boys! (${s})`
+      ],
+      'goalie-change-relief': [
+        (p, a, s, gIn, gOut) => `🧤 Goalie change for our team: ${gIn} enters the game in net! Let's lock it down! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Change in net: ${gIn} takes over between the pipes! Let's go ${gIn}! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Goalie change called: ${gIn} takes the crease! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 New netminder on the ice for our team: ${gIn} is now in goal! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Fresh legs in net as ${gIn} takes over between the pipes! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Switch in the blue paint: ${gIn} enters the net! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Goalie change: ${gIn} takes the crease for the rest of the game! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Netminder switch: ${gIn} enters the contest! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Goalie change for the squad: ${gIn} is in net! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 ${gIn} heads into the crease to take over in net! (${s})`
+      ,
+        (p, a, s, gIn, gOut) => `🧤 Change between the pipes: ${gIn} takes over the crease! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Goalie switch called: ${gIn} enters the net! Let's go ${gIn}! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 New netminder on the ice for our team: ${gIn} is now in goal! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Goalie substitution: ${gIn} enters the blue paint! (${s})`,
+        (p, a, s, gIn, gOut) => `🧤 Switch in the net: ${gIn} takes over the cage! (${s})`
+      ],
+      'goalie-glove': [
+        (p, a) => `sensational glove save by ${p}! Flashed the leather!`,
+        (p, a) => `windmill robbery by ${p} snatching a high laser!`,
+        (p, a) => `${p} flashes the leather and robs them top shelf!`,
+        (p, a) => `what a grab by ${p}! Plucks it clean out of the air!`,
+        (p, a) => `${p} with lightning-quick glove speed on the snipe!`,
+        (p, a) => `highway robbery by ${p} flashing the trapper!`,
+        (p, a) => `${p} snatches the puck right off the goal line!`,
+        (p, a) => `spectacular glove save by ${p}! Crowd on their feet!`,
+        (p, a) => `${p} shows off the lightning glove hand on a fast break!`,
+        (p, a) => `absolute thievery by ${p} with the glove!`
+      ,
+        (p, a) => `${p} reaches out and snares a laser with the trapper!`,
+        (p, a) => `highlight-reel glove stop by ${p}! Plucks it out of the air!`,
+        (p, a) => `${p} flashes the leather and denies the top corner snipe!`,
+        (p, a) => `windmill glove robbery by ${p}! Absolute larceny!`,
+        (p, a) => `${p} snatches the biscuit clean with lightning glove speed!`,
+        (p, a) => `glove save of the game by ${p}! What a reaction!`
+      ],
+      'goalie-breakaway': [
+        (p, a) => `${p} stonewalls the opponent all alone on a breakaway!`,
+        (p, a) => `${p} comes out to challenge and denies the breakaway cleanly!`,
+        (p, a) => `brick wall in net! ${p} outwaits the breakaway shooter!`,
+        (p, a) => `huge breakaway save by ${p} coming up clutch!`,
+        (p, a) => `${p} shuts the door on a clean breakaway chance!`,
+        (p, a) => `calm as ice! ${p} tracks the deke and denies the breakaway!`,
+        (p, a) => `${p} refuses to bite and shuts down the odd-man rush!`,
+        (p, a) => `massive breakaway stop by ${p} protecting our lead!`,
+        (p, a) => `${p} swallows up the breakaway attempt! Zero panic!`,
+        (p, a) => `clutch netminding! ${p} robs the breakaway shooter cold!`
+      ,
+        (p, a) => `${p} outwaits the deke and shuts the door cold on the breakaway!`,
+        (p, a) => `breakaway robbery by ${p}! Comes out to challenge and denies the shooter!`,
+        (p, a) => `${p} refuses to bite and stones the breakaway attempt completely!`,
+        (p, a) => `calm and composed: ${p} denies the breakaway all alone!`,
+        (p, a) => `${p} slides across and denies the backhand deke on the breakaway!`,
+        (p, a) => `massive breakaway stonewall by ${p} keeping our lead intact!`
+      ],
+      'goalie-pad': [
+        (p, a) => `doorstep robbery! Quick pad save by ${p}!`,
+        (p, a) => `${p} kicks out the right pad for an unbelievable stop!`,
+        (p, a) => `lightning-fast pad save by ${p} on the rebound chance!`,
+        (p, a) => `${p} stacks the pads to deny the point-blank rebound!`,
+        (p, a) => `sensational kick save by ${p} keeping the puck out!`,
+        (p, a) => `${p} extends the toe pad to rob an open net chance!`,
+        (p, a) => `unbelievable reaction time by ${p} with the pad stop!`,
+        (p, a) => `${p} shuts the doorstep with a clutch pad push!`,
+        (p, a) => `athletic pad save by ${p} on the backdoor scramble!`,
+        (p, a) => `${p} flashes the pad and kicks the rebound safely to the corner!`
+      ,
+        (p, a) => `${p} kicks out the left pad on the backdoor one-timer!`,
+        (p, a) => `unbelievable reaction time: ${p} shuts the door with the pad!`,
+        (p, a) => `${p} stacks the pads and denies the second-chance rebound!`,
+        (p, a) => `quick butterfly kick save by ${p} steering the puck to the corner!`,
+        (p, a) => `${p} flashes the pad and robs them on the doorstep scramble!`,
+        (p, a) => `athletic pad push by ${p} sealing the ice on a point-blank chance!`
+      ],
+      'goalie-freeze': [
+        (p, a) => `${p} smothers the puck and freezes play under heavy traffic`,
+        (p, a) => `${p} covers up the loose puck in the blue paint for a whistle`,
+        (p, a) => `composed goaltending by ${p} absorbing the high shot`,
+        (p, a) => `${p} falls on the loose biscuit and settles things down`,
+        (p, a) => `${p} swallows the puck in the chest for a safe stoppage`,
+        (p, a) => `heads-up freeze by ${p} killing off the opponent's momentum`,
+        (p, a) => `${p} smothers the scramble in front and gets the whistle`,
+        (p, a) => `calm presence in net as ${p} freezes play cleanly`,
+        (p, a) => `${p} takes away second chances by freezing the puck`,
+        (p, a) => `solid coverage by ${p} holding on for the faceoff`
+      ,
+        (p, a) => `${p} pulls the puck into the chest under heavy crease traffic for a whistle`,
+        (p, a) => `smart freeze by ${p} to kill off the opponent's sustained zone pressure`,
+        (p, a) => `${p} pounces on the loose biscuit and smothers it cleanly`,
+        (p, a) => `veteran poise in net: ${p} covers the puck under heavy traffic`,
+        (p, a) => `${p} smothers the scramble in front and gets the whistle safely`,
+        (p, a) => `composed stop by ${p} holding on to slow down the game`
+      ],
+
+      // OPPONENT
+      'opp-goal': [
+        (p, a, s) => `🔴 Goal ${p}. ${s}`,
+        (p, a, s) => `🔴 ${p} finds the back of the net. ${s}`,
+        (p, a, s) => `🔴 ${p} scores on a quick rush. ${s}`,
+        (p, a, s) => `🔴 Score for ${p}. Time to battle back! ${s}`,
+        (p, a, s) => `🔴 ${p} puts one in. Reset and refocus boys! ${s}`,
+        (p, a, s) => `🔴 ${p} gets on the board. ${s}`,
+        (p, a, s) => `🔴 ${p} finds a way through for a goal. ${s}`,
+        (p, a, s) => `🔴 Goal scored by ${p}. ${s}`,
+        (p, a, s) => `🔴 ${p} scores. Next shift is big! ${s}`,
+        (p, a, s) => `🔴 ${p} capitalizes on the play. ${s}`
+      ,
+        (p, a, s) => `🔴 ${p} scores on a quick counter-attack. ${s}`,
+        (p, a, s) => `🔴 Goal for ${p}. Reset and get the next shift! ${s}`,
+        (p, a, s) => `🔴 ${p} finds the mesh on a screened shot. ${s}`,
+        (p, a, s) => `🔴 ${p} scores on a rush. Time to battle back! ${s}`,
+        (p, a, s) => `🔴 Score by ${p}. Next shift is huge boys! ${s}`,
+        (p, a, s) => `🔴 ${p} gets on the board. Plenty of hockey left! ${s}`
+      ],
+      'opp-scramble': [
+        (p, a, s) => `🔴 ${p} scores on a scramble rebound in front. ${s}`,
+        (p, a, s) => `🔴 Loose puck in the crease put in by ${p}. ${s}`,
+        (p, a, s) => `🔴 ${p} pokes in a rebound in tight. ${s}`,
+        (p, a, s) => `🔴 Scramble in front of our cage and ${p} knocks it in. ${s}`,
+        (p, a, s) => `🔴 Rebound goal for ${p} after a frantic sequence. ${s}`,
+        (p, a, s) => `🔴 ${p} bangs home a second-chance puck in the crease. ${s}`,
+        (p, a, s) => `🔴 Net-front scramble won by ${p} for the goal. ${s}`,
+        (p, a, s) => `🔴 ${p} jams home a loose puck over the line. ${s}`,
+        (p, a, s) => `🔴 Bounce goes ${p}'s way in the crease for a goal. ${s}`,
+        (p, a, s) => `🔴 ${p} scores off a broken play rebound. ${s}`
+      ,
+        (p, a, s) => `🔴 Scramble in front of our cage and ${p} pokes it home. ${s}`,
+        (p, a, s) => `🔴 Rebound bounces ${p}'s way in the crease for a goal. ${s}`,
+        (p, a, s) => `🔴 Loose puck in the blue paint put in by ${p}. ${s}`,
+        (p, a, s) => `🔴 ${p} cleans up a rebound in tight. ${s}`,
+        (p, a, s) => `🔴 Jam play in front of our net results in a goal for ${p}. ${s}`,
+        (p, a, s) => `🔴 Second-chance puck tucked in by ${p}. ${s}`
+      ],
+      'opp-pressure': [
+        (p, a) => `⚠️ Heavy pressure in our zone from ${p}. Boys are defending hard!`,
+        (p, a) => `⚠️ Long shift in our defensive end under pressure from ${p}. Standing tall!`,
+        (p, a) => `⚠️ ${p} pressing hard in our zone. Working relentless to clear!`,
+        (p, a) => `⚠️ Extended zone time for ${p}. Big battle in front of our net!`,
+        (p, a) => `⚠️ Heavy forecheck from ${p}. Team grinding along the boards to get it out!`,
+        (p, a) => `⚠️ High pressure shift in our end by ${p}. Boys keeping them to the outside!`,
+        (p, a) => `⚠️ ${p} throwing everything at our net, solid defense holding strong!`,
+        (p, a) => `⚠️ Pinned in our zone by ${p}, team working together to weather the storm!`,
+        (p, a) => `⚠️ Intense pressure from ${p}. Good defensive positioning shutting lanes!`,
+        (p, a) => `⚠️ Defensive zone battle against a strong push from ${p}!`
+      ,
+        (p, a) => `⚠️ ${p} with sustained cycle pressure in our end. Defending hard!`,
+        (p, a) => `⚠️ Long shift in our defensive zone. Boys keeping ${p} to the outside!`,
+        (p, a) => `⚠️ Heavy forecheck from ${p}. Team working together along the boards!`,
+        (p, a) => `⚠️ ${p} throwing pucks on net. Standing strong in front!`,
+        (p, a) => `⚠️ Big defensive zone stand under high pressure from ${p}!`,
+        (p, a) => `⚠️ ${p} buzzing in our end. Need a smart clear to relieve the siege!`
+      ]
+    };
+
+    // Helper to format natural team names with "the" (e.g. "the Bulldogs", "the Hawks")
+    function withThe(teamName) {
+      if (!teamName) return '';
+      const trimmed = teamName.trim();
+      if (/^the\s+/i.test(trimmed)) return trimmed;
+      return 'the ' + trimmed;
+    }
+
+    // Period and Game Status Reports
+    const periodStatusPhrases = {
+      'warmup': [
+        (per, our, opp, sc, os, ops) => `🏒 Warmups underway here at the arena! Boys look sharp flying through line rushes! Puck drop shortly!`,
+        (per, our, opp, sc, os, ops) => `🏒 Sticks taped, skates laced! Teams are out on the ice for pre-game warmups! Let's go ${our}!`,
+        (per, our, opp, sc, os, ops) => `🏒 Pre-game warmups in full swing! Great energy in the building today. Opening faceoff in 10 minutes!`,
+        (per, our, opp, sc, os, ops) => `🏒 Warmups complete and the Zamboni is flooding the sheet! Game on in minutes! Let's get that W, ${our}!`,
+        (per, our, opp, sc, os, ops) => `🏒 Both squads wrapping up warmups and heading to the room for final words. Big tilt today against ${withThe(opp)}!`,
+        (per, our, opp, sc, os, ops) => `🏒 Music is pumping, pucks are flying in warmups! ${withThe(our)} ready to battle ${withThe(opp)}!`,
+        (per, our, opp, sc, os, ops) => `🏒 Goalies are stretched out and taking rubber in the crease! Game time approaching fast!`,
+        (per, our, opp, sc, os, ops) => `🏒 Starting lineup ready to roll! ${withThe(our)} geared up for a huge matchup today! Puck drop right around the corner!`,
+        (per, our, opp, sc, os, ops) => `🏒 Line rushes looking crisp in warmups! Focus is high in the barn today. Let's go ${our}!`,
+        (per, our, opp, sc, os, ops) => `🏒 Netminders dialed in, skaters dialed in! Warmups done and ready for puck drop against ${withThe(opp)}!`
+      ],
+      'puck-drop': [
+        (per, our, opp, sc, os, ops) => per === 'OT' 
+          ? `🏒 🚨 SUDDEN DEATH OVERTIME UNDERWAY! Next goal wins it all! Heart rates through the roof! (${sc})`
+          : (per === '1st' 
+            ? `🏒 THE PUCK IS DOWN! 1st period underway between ${withThe(our)} and ${withThe(opp)}! Let's set the tone early!`
+            : `🏒 Puck is down for the ${per}! Let's keep the foot on the gas ${our}! (${sc})`),
+        (per, our, opp, sc, os, ops) => per === 'OT'
+          ? `🏒 OVERTIME HOCKEY! Extra frame begins! One shot, one play to take it! Let's go ${our}! (${sc})`
+          : (per === '1st'
+            ? `🏒 Game on! Official drops the biscuit and we are underway in the 1st between ${withThe(our)} and ${withThe(opp)}! Fast pace right off the opening draw!`
+            : `🏒 Fresh sheet of ice! 15 minutes of hockey underway for the ${per}! Score: ${sc}.`),
+        (per, our, opp, sc, os, ops) => per === 'OT'
+          ? `🏒 Next goal takes the game! Overtime puck is down! Leave everything on the ice boys! (${sc})`
+          : (per === '3rd'
+            ? `🏒 3rd period underway! Final 15 minutes of regulation! Big push needed boys! (${sc})`
+            : (per === '1st'
+              ? `🏒 Opening faceoff is in the books! 1st period action begins between ${withThe(our)} and ${withThe(opp)}!`
+              : `🏒 Whistle blows and puck drops for the ${per}! Action underway! (${sc})`)),
+        (per, our, opp, sc, os, ops) => per === '1st'
+          ? `🏒 Anthems done, ice flooded, and the opening draw is in the books! 1st period is on! Let's go ${our}!`
+          : `🏒 Back out for the ${per}! High energy right off the center faceoff! (${sc})`,
+        (per, our, opp, sc, os, ops) => per === '3rd'
+          ? `🏒 Big 3rd period begins now! Everything on the line in this final frame! Score: ${sc}.`
+          : (per === '1st'
+            ? `🏒 The wait is over! Opening puck drop in the 1st! Let's get to work ${our}!`
+            : `🏒 Action resumes in the ${per}! Let's set the pace ${our}! (${sc})`),
+        (per, our, opp, sc, os, ops) => per === '1st'
+          ? `🏒 Opening whistle blows and ${withThe(our)} take the ice against ${withThe(opp)}! 1st period underway!`
+          : `🏒 Official drops the puck for the ${per}! Huge period ahead! (${sc})`,
+        (per, our, opp, sc, os, ops) => per === '1st'
+          ? `🏒 The barn is rocking and the biscuit is on the ice for the 1st!`
+          : `🏒 The barn is rocking and the biscuit is on the ice for the ${per}! (${sc})`,
+        (per, our, opp, sc, os, ops) => per === '1st'
+          ? `🏒 Clean draw win to start the 1st! Let's go ${our}!`
+          : `🏒 Clean draw win to start the ${per}! Let's go ${our}! (${sc})`,
+        (per, our, opp, sc, os, ops) => per === '1st'
+          ? `🏒 Underway in the 1st! Flying on the ice early against ${withThe(opp)}!`
+          : `🏒 Underway in the ${per}! Flying on the ice early! (${sc})`,
+        (per, our, opp, sc, os, ops) => per === '1st'
+          ? `🏒 Game on for the 1st period! Let's set the tempo early boys!`
+          : `🏒 Game on for the ${per}! Score stands at ${sc}. Let's do this!`,
+        (per, our, opp, sc, os, ops) => per === '1st'
+          ? `🏒 First shift of the 1st: puck is dropped and ${withThe(our)} attacking with speed!`
+          : `🏒 First shift of the ${per}: puck is dropped and ${our} attacking with speed! (${sc})`,
+        (per, our, opp, sc, os, ops) => per === '1st'
+          ? `🏒 Center ice faceoff won by ${withThe(our)}! 1st period underway!`
+          : `🏒 Center ice faceoff won! ${per} period underway! (${sc})`
+      ],
+      'period-end': [
+        (per, our, opp, sc, os, ops) => (os !== undefined && ops !== undefined && os > ops)
+          ? `⏸️ End of the ${per}! ${our} take a ${sc} lead into the dressing room! Great 15 minutes of hockey!`
+          : ((os !== undefined && ops !== undefined && os < ops)
+            ? `⏸️ End of the ${per}. Down ${sc}, but the boys are working hard and generating chances. Big comeback frame coming up!`
+            : `⏸️ End of the ${per}! Deadlocked at ${sc}! Total barnburner today!`),
+        (per, our, opp, sc, os, ops) => (os !== undefined && ops !== undefined && os > ops)
+          ? `⏸️ Buzzer sounds to end the ${per}! Leading ${sc} after a dominant period! Zamboni floods the ice.`
+          : ((os !== undefined && ops !== undefined && os < ops)
+            ? `⏸️ Horn sounds on the ${per} at ${sc}. Regroup in the room and come out flying for the next frame!`
+            : `⏸️ Buzzer sounds on the ${per}. All square at ${sc}. Both teams trading chances! Huge period coming up!`),
+        (per, our, opp, sc, os, ops) => (os !== undefined && ops !== undefined && os > ops)
+          ? `⏸️ That wraps up the ${per}! Great discipline and effort to hold the lead at ${sc}!`
+          : `⏸️ That wraps up the ${per}! Heading into the intermission at ${sc}. Coaches talking strategy in the room!`,
+        (per, our, opp, sc, os, ops) => (os !== undefined && ops !== undefined && os > ops)
+          ? `⏸️ Intermission time! Solid frame in the books as ${our} head to the dressing room up ${sc}!`
+          : `⏸️ Intermission time! Fast-paced hockey through the ${per}. Score: ${sc}.`,
+        (per, our, opp, sc, os, ops) => `⏸️ Horn sounds on the ${per}! Current score: ${sc}. Catch your breath, next period coming up!`,
+        (per, our, opp, sc, os, ops) => `⏸️ That's the end of the ${per}! Boys heading to the room for oranges and water at ${sc}.`,
+        (per, our, opp, sc, os, ops) => `⏸️ 15 minutes in the books for the ${per}. Score: ${sc}. Great battle so far!`,
+        (per, our, opp, sc, os, ops) => `⏸️ End of the ${per}! Reset and get ready for the next 15 minutes! (${sc})`,
+        (per, our, opp, sc, os, ops) => `⏸️ Buzzer ends the ${per}! Great effort out there. Score stands at ${sc}.`,
+        (per, our, opp, sc, os, ops) => `⏸️ Intermission flood underway! After the ${per}, it's ${sc}.`
+      ],
+      'game-final': [
+        (per, our, opp, sc, os, ops) => (per === 'OT' && os !== undefined && ops !== undefined && os > ops)
+          ? `🏆 🚨 OT WINNER! ${our.toUpperCase()} WIN IT IN OVERTIME ${sc}! Absolute pandemonium on the ice!`
+          : ((os !== undefined && ops !== undefined && os > ops)
+            ? `🏆 FINAL BUZZER! ${our.toUpperCase()} WIN IT ${sc}! What an incredible effort from start to finish! Sticks in the air!`
+            : ((os !== undefined && ops !== undefined && os < ops)
+              ? `🏁 FINAL: Tough ${sc} battle today. Boys worked their tails off right to the final horn and never quit. Proud of the effort!`
+              : `🤝 FINAL: A hard-fought ${sc} tie! What an epic battle from both teams today! Left everything on the ice!`)),
+        (per, our, opp, sc, os, ops) => (os !== undefined && ops !== undefined && os > ops)
+          ? `🏆 THAT'S A WRAP! ${our} skate away with a huge ${sc} victory! Dominant performance all over the ice!`
+          : ((os !== undefined && ops !== undefined && os < ops)
+            ? `🏁 Full time: ${opp} take this one ${sc}. Great fight from the boys until the final second. Reset and on to the next one!`
+            : `🤝 Final buzzer sounds on a ${sc} draw. Outstanding hockey game at both ends of the rink!`),
+        (per, our, opp, sc, os, ops) => (os !== undefined && ops !== undefined && os > ops)
+          ? `🏆 FINAL SCORE: ${sc}! Complete team effort and lockdown defense seals the win! Great game boys!`
+          : ((os !== undefined && ops !== undefined && os < ops)
+            ? `🏁 Final buzzer sounds: ${sc}. Terrific hockey game, just couldn't find the equalizer late. Proud of this squad!`
+            : `🤝 Full time: ${sc} tie! Great goaltending duel today. Hard-earned point!`),
+        (per, our, opp, sc, os, ops) => (os !== undefined && ops !== undefined && os > ops)
+          ? `🏆 VICTORY! ${our} take it ${sc}! Great goaltending and relentless hustle on display today!`
+          : `🏁 Full time whistle: ${sc}! Great battle between two competitive squads today!`,
+        (per, our, opp, sc, os, ops) => (os !== undefined && ops !== undefined && os > ops)
+          ? `🏆 HORN SOUNDS! ${our} win ${sc}! Team gathers at the net to mob the goalie! Huge W!`
+          : `🏁 FINAL: ${sc}. Tough bounce today, but the work ethic was there all game. Heads held high!`,
+        (per, our, opp, sc, os, ops) => (os !== undefined && ops !== undefined && os > ops)
+          ? `🏆 FINAL: ${sc}! Proud of the boys! Hard work in practice paying off on the ice today!`
+          : `🏁 That's the game! Final result: ${sc}. Great effort out there today!`,
+        (per, our, opp, sc, os, ops) => (os !== undefined && ops !== undefined && os > ops)
+          ? `🏆 THAT'LL DO IT! ${our} secure the ${sc} victory! Parents on their feet!`
+          : `🏁 Buzzer sounds to end the contest: ${sc}! On to the next one!`,
+        (per, our, opp, sc, os, ops) => `🏆 Final score in the books: ${sc}! Fantastic hockey from both sides today!`,
+        (per, our, opp, sc, os, ops) => `🏆 Game over! Final score: ${sc}! What a game to watch!`,
+        (per, our, opp, sc, os, ops) => `🏆 That wraps up today's contest! Final result: ${sc}!`
+      ]
+    };
+
+    // Announcer Flavor Packs for Goals & Highlights
+    const announcerIntros = [
+      "HE SHOOTS, HE SCORES! ",
+      "LIGHT THE LAMP! ",
+      "OH BABY! WHAT A PLAY! ",
+      "MERCY! ",
+      "CAN YOU BELIEVE IT?! ",
+      "BAR DOWN AND IN! ",
+      "FIRE UP THE SIREN! ",
+      "WHAT A RIP! ",
+      "SWEET MOTHER OF HOCKEY! ",
+      "TEXTBOOK CLINIC! ",
+      "UNBELIEVABLE MOVE! ",
+      "HEADING TO THE HIGHLIGHT REEL! ",
+      "ARE YOU KIDDING ME?! ",
+      "GREAT SCOT! WHAT A GOAL! ",
+      "RIGHT ON THE TAPE AND IN! ",
+      "DOWN WENT THE GOALIE! ",
+      "TOP CORNER PURE SNIPE! ",
+      "THAT WILL WAKE UP THE WHOLE ARENA! "
+    ];
+
+    const announcerOutros = [
+      " Pure hockey poetry!",
+      " Goalie is still looking for that one!",
+      " You could hear that ping all the way out in the parking lot!",
+      " Top shelf where grand-pappy keeps the moonshine!",
+      " Put that one on the highlight reel!",
+      " Water bottle went into orbit!",
+      " Unstoppable venom on that shot!",
+      " The barn is rocking!",
+      " That one had eyes through traffic!",
+      " Absolute clinic on display today!",
+      " You cannot stop that with two goaltenders!",
+      " Smooth as silk from start to finish!",
+      " Total silence on the opponent's bench!",
+      " Parents on their feet cheering!",
+      " Clean as a whistle!",
+      " What an absolute gem of a goal!"
+    ];
+
+    // Load & Render on Start
+    function initApp() {
+      try {
+        loadGameState();
+      } catch (e) {
+        console.warn('GameState load skipped:', e);
+      }
+      try {
+        updatePlayerBadges();
+        autoResizeTextarea();
+      } catch (e) {}
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+      initApp();
+    }
+    window.onload = initApp;
+
+    function autoResizeTextarea() {
+      const box = document.getElementById('output');
+      if (!box) return;
+      box.style.height = 'auto';
+      box.style.height = Math.max(56, box.scrollHeight) + 'px';
+    }
+
+    function clearOutput() {
+      pushUndoState();
+      document.getElementById('output').value = '';
+      currentSteps = [];
+      lastKey = null;
+      autoResizeTextarea();
+      saveGameState();
+    }
+
+    function onPlayerTap(num) {
+      if (primaryPlayer === num) {
+        setPrimary(null);
+      } else if (assistPlayer === num) {
+        setAssist(null);
+      } else if (!primaryPlayer) {
+        setPrimary(num);
+      } else if (!assistPlayer) {
+        setAssist(num);
+      } else {
+        // Both full, cycle primary
+        setPrimary(num);
+      }
+    }
+
+    function setPrimary(num) {
+      primaryPlayer = num;
+      updatePlayerBadges();
+      saveGameState();
+    }
+
+    function setAssist(num) {
+      assistPlayer = num;
+      updatePlayerBadges();
+      saveGameState();
+    }
+
+    function clearPlayers() {
+      primaryPlayer = null;
+      assistPlayer = null;
+      document.getElementById('customNum').value = '';
+      updatePlayerBadges();
+      saveGameState();
+    }
+
+    function setCustom(target) {
+      const val = parseInt(document.getElementById('customNum').value, 10);
+      if (!val) return;
+      if (target === 'primary') setPrimary(val);
+      else setAssist(val);
+      document.getElementById('customNum').value = '';
+    }
+
+    function updatePlayerBadges() {
+      const bPrim = document.getElementById('badgePrimary');
+      const bAsst = document.getElementById('badgeAssist');
+      if (primaryPlayer) {
+        document.getElementById('lblPrimary').textContent = '#' + primaryPlayer;
+        bPrim.style.display = 'flex';
+      } else {
+        bPrim.style.display = 'none';
+      }
+      if (assistPlayer) {
+        document.getElementById('lblAssist').textContent = '#' + assistPlayer;
+        bAsst.style.display = 'flex';
+      } else {
+        bAsst.style.display = 'none';
+      }
+
+      // Update button highlight classes and goal counter badges
+      document.querySelectorAll('.num-btn').forEach(btn => {
+        const raw = parseInt(btn.id.replace('pbtn-', ''), 10);
+        btn.classList.toggle('active-primary', raw === primaryPlayer);
+        btn.classList.toggle('active-assist', raw === assistPlayer);
+
+        // Remove old badge if any
+        const oldBadge = btn.querySelector('.goal-counter-badge');
+        if (oldBadge) oldBadge.remove();
+
+        const count = playerGoals[raw] || 0;
+        if (count > 0) {
+          const badge = document.createElement('span');
+          badge.className = 'goal-counter-badge' + (count >= 3 ? ' hat-trick' : '');
+          badge.textContent = count >= 3 ? '🎩' + count : count;
+          btn.appendChild(badge);
+        }
+      });
+    }
+
+    // Time Tagging
+    function setTimeTag(tag) {
+      currentTimeTag = tag;
+      document.querySelectorAll('.time-chip').forEach(c => c.classList.remove('active'));
+      if (!tag) {
+        document.getElementById('chip-time-none').classList.add('active');
+      } else if (tag === 'Early') {
+        document.getElementById('chip-time-early').classList.add('active');
+      } else if (tag === 'Mid') {
+        document.getElementById('chip-time-mid').classList.add('active');
+      } else if (tag.includes('Late')) {
+        document.getElementById('chip-time-late').classList.add('active');
+      } else if (tag.includes('Under 2')) {
+        document.getElementById('chip-time-under2').classList.add('active');
+      } else {
+        document.getElementById('chip-time-finalmin').classList.add('active');
+      }
+    }
+
+    function adjScore(team, d) {
+      pushUndoState();
+      if (team === 'our') ourScore = Math.max(0, ourScore + d);
+      else oppScore = Math.max(0, oppScore + d);
+      document.getElementById('ourScore').textContent = ourScore;
+      document.getElementById('oppScore').textContent = oppScore;
+      saveGameState();
+    }
+
+    function getScoreText() {
+      const our = document.getElementById('ourTeam').value.trim() || 'Bulldogs';
+      const opp = document.getElementById('oppTeam').value.trim() || 'Hawks';
+      if (ourScore === oppScore) return `Tied ${ourScore}-${oppScore}`;
+      if (ourScore > oppScore) return `${ourScore}-${oppScore} ${our}`;
+      return `${oppScore}-${ourScore} ${opp}`;
+    }
+
+    function showTab(id, btn) {
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      ['setup', 'finish', 'hustle', 'penalties', 'defense', 'goalie', 'opp'].forEach(t => {
+        const el = document.getElementById('tab-' + t);
+        if (el) el.style.display = (t === id) ? 'grid' : 'none';
+      });
+    }
+
+    // Check if the current goal is high-leverage / clutch for "Holy Mackinaw"
+    function isClutchGoal() {
+      const per = document.getElementById('periodSelect').value;
+      // 1. Any Overtime goal (Golden goal / game winner!)
+      if (per === 'OT') return true;
+      // 2. Go-ahead goal (breaks a tie to take the lead)
+      if (ourScore === oppScore + 1) return true;
+      // 3. Late 3rd period in a tight game (within 1 goal)
+      const isLate3rd = (per === '3rd' || per === 'Final') && 
+        (currentTimeTag.includes('Late') || currentTimeTag.includes('Under 2') || currentTimeTag.includes('Final'));
+      const isTightScore = Math.abs(ourScore - oppScore) <= 1;
+      if (isLate3rd && isTightScore) return true;
+
+      return false;
+    }
+
+    // Action Execution
+    function applyPlay(key) {
+      pushUndoState();
+
+      if (key.startsWith('goal-')) {
+        ourScore = Math.max(0, ourScore + 1);
+        document.getElementById('ourScore').textContent = ourScore;
+      }
+      if (key.startsWith('opp-goal') || key === 'opp-scramble') {
+        oppScore = Math.max(0, oppScore + 1);
+        document.getElementById('oppScore').textContent = oppScore;
+      }
+
+      lastKey = key;
+      lastVarIndex = Math.floor(Math.random() * phrases[key].length);
+
+      const isMulti = document.getElementById('multiStepToggle').checked;
+      const isAnnouncer = document.getElementById('announcerToggle').checked;
+      const box = document.getElementById('output');
+
+      if (!isMulti || box.value.trim().length === 0) {
+        currentSteps = [];
+      }
+
+      const prevStep = (isMulti && currentSteps.length > 0) ? currentSteps[currentSteps.length - 1] : null;
+      let thisPrimary = primaryPlayer;
+      let thisAssist = assistPlayer;
+      let isSameAsPrev = false;
+
+      // Smart Carry-Over: if multi-step and user didn't tap a new number, inherit the player from step 1!
+      if (isMulti && prevStep && thisPrimary === null && prevStep.primary) {
+        thisPrimary = prevStep.primary;
+        isSameAsPrev = true;
+      } else if (isMulti && prevStep && thisPrimary !== null && prevStep.primary === thisPrimary) {
+        isSameAsPrev = true;
+      }
+
+      // Track individual player goal count
+      let goalCount = 0;
+      if (key.startsWith('goal-') && thisPrimary) {
+        playerGoals[thisPrimary] = (playerGoals[thisPrimary] || 0) + 1;
+        goalCount = playerGoals[thisPrimary];
+        updatePlayerBadges();
+      }
+
+      const phrase = getPhrase(key, lastVarIndex, thisPrimary, thisAssist);
+
+      let prefix = '';
+      if (currentTimeTag && (!isMulti || currentSteps.length === 0)) {
+        const per = document.getElementById('periodSelect').value;
+        prefix = `[${currentTimeTag} ${per}] `;
+      }
+
+      let styledPhrase = phrase;
+      if (key.startsWith('goal-')) {
+        // Milestone Celebrations (Hat Trick / 2nd of the game / 4th goal)
+        if (goalCount === 3) {
+          styledPhrase = phrase + ` 🎩 HAT TRICK ALERT!! That's 3 on the day for #${thisPrimary}! Throw the hats on the ice!!`;
+        } else if (goalCount === 2) {
+          styledPhrase = phrase + ` That's a pair on the day for #${thisPrimary}!`;
+        } else if (goalCount >= 4) {
+          styledPhrase = phrase + ` Incredible! That's goal #${goalCount} today for #${thisPrimary}! Unstoppable!!`;
+        }
+
+        if (isAnnouncer) {
+          const clutch = isClutchGoal();
+          const useHolyMackinaw = clutch && (Math.random() < 0.35);
+
+          if (useHolyMackinaw) {
+            if (!isMulti || currentSteps.length === 0) {
+              let clean = styledPhrase.replace(/^and\s+/i, '');
+              styledPhrase = "HOLY MACKINAW!! " + clean.charAt(0).toUpperCase() + clean.slice(1);
+            } else {
+              styledPhrase = styledPhrase.replace(/^and\s+/i, 'and HOLY MACKINAW, ');
+            }
+          } else {
+            const intro = announcerIntros[Math.floor(Math.random() * announcerIntros.length)];
+            const outro = announcerOutros[Math.floor(Math.random() * announcerOutros.length)];
+            if (!isMulti || currentSteps.length === 0) {
+              let clean = styledPhrase.replace(/^and\s+/i, '');
+              styledPhrase = intro + clean.charAt(0).toUpperCase() + clean.slice(1) + outro;
+            }
+          }
+        }
+      }
+
+      // If same player as previous step, smoothly connect: replace "and #7 " with "and "
+      if (isMulti && currentSteps.length > 0 && isSameAsPrev && thisPrimary) {
+        styledPhrase = styledPhrase.replace(new RegExp('^and\\s+#' + thisPrimary + '\\s+', 'i'), 'and ');
+      }
+
+      const stepObj = {
+        key: key,
+        varIndex: lastVarIndex,
+        primary: thisPrimary,
+        assist: thisAssist,
+        isSameAsPrev: isSameAsPrev,
+        goalCount: goalCount,
+        isPeriodStatus: false,
+        text: (isMulti && currentSteps.length > 0) ? styledPhrase : (prefix + styledPhrase.charAt(0).toUpperCase() + styledPhrase.slice(1))
+      };
+
+      if (isMulti && currentSteps.length > 0) {
+        currentSteps.push(stepObj);
+      } else {
+        currentSteps = [stepObj];
+      }
+
+      box.value = currentSteps.map(s => s.text).join(', ');
+      autoResizeTextarea();
+
+      // Auto-clear player selection after applying a play in multi-step mode
+      // so the next selected player immediately becomes the actor for the next step!
+      if (isMulti) {
+        primaryPlayer = null;
+        assistPlayer = null;
+        updatePlayerBadges();
+      }
+
+      saveGameState();
+    }
+
+    function getPhrase(key, idx, pOverride, aOverride) {
+      const pVal = (pOverride !== undefined) ? pOverride : primaryPlayer;
+      const aVal = (aOverride !== undefined) ? aOverride : assistPlayer;
+      const p = pVal ? `#${pVal}` : (document.getElementById('ourTeam').value || 'Bulldogs');
+      const a = aVal ? `#${aVal}` : null;
+      const opp = document.getElementById('oppTeam').value || 'Hawks';
+      const score = getScoreText();
+      const list = phrases[key];
+      const fn = list[idx % list.length];
+      if (key.startsWith('opp-')) return fn(opp, null, score);
+
+      if (key.startsWith('goalie-change-')) {
+        let gIn = '#74';
+        let gOut = '#29';
+        if (pVal === 29) {
+          gIn = '#29';
+          gOut = '#74';
+        } else if (pVal === 74) {
+          gIn = '#74';
+          gOut = '#29';
+        } else if (pVal && aVal) {
+          gIn = `#${pVal}`;
+          gOut = `#${aVal}`;
+        }
+        return fn(p, a, score, gIn, gOut);
+      }
+
+      return fn(p, a, score);
+    }
+
+    // Rephrase
+    function rephrase() {
+      if (currentSteps.length === 0) {
+        if (!lastKey || !phrases[lastKey]) return;
+      }
+
+      // Check if it was a period status
+      if (currentSteps.length === 1 && currentSteps[0].isPeriodStatus) {
+        const step = currentSteps[0];
+        const per = document.getElementById('periodSelect').value;
+        const our = document.getElementById('ourTeam').value.trim() || 'Bulldogs';
+        const opp = document.getElementById('oppTeam').value.trim() || 'Hawks';
+        const sc = getScoreText();
+        const gameType = document.getElementById('gameTypeSelect').value;
+        const tourney = document.getElementById('tourneyNameInput').value.trim();
+        let tourneyPrefix = '';
+        if (tourney && gameType) tourneyPrefix = `[${tourney} - ${gameType}] `;
+        else if (tourney) tourneyPrefix = `[${tourney}] `;
+        else if (gameType) tourneyPrefix = `[${gameType}] `;
+
+        const list = periodStatusPhrases[step.key];
+        step.varIndex = (step.varIndex + 1) % list.length;
+        step.text = tourneyPrefix + list[step.varIndex](per, our, opp, sc, ourScore, oppScore);
+        document.getElementById('output').value = step.text;
+        autoResizeTextarea();
+        saveGameState();
+        return;
+      }
+
+      const isMulti = document.getElementById('multiStepToggle').checked;
+      const isAnnouncer = document.getElementById('announcerToggle').checked;
+      const box = document.getElementById('output');
+
+      if (currentSteps.length > 0) {
+        // Rephrase every step in the multi-step sequence together!
+        currentSteps.forEach((step, sIdx) => {
+          if (!step || !phrases[step.key]) return;
+          step.varIndex = (step.varIndex + 1) % phrases[step.key].length;
+          const newRaw = getPhrase(step.key, step.varIndex, step.primary, step.assist);
+          let styled = newRaw;
+
+          const isSame = step.isSameAsPrev || (sIdx > 0 && currentSteps[sIdx - 1].primary && currentSteps[sIdx - 1].primary === step.primary);
+
+          if (step.key.startsWith('goal-')) {
+            if (step.goalCount === 3) {
+              styled += ` 🎩 HAT TRICK ALERT!! That's 3 on the day for #${step.primary}! Throw the hats on the ice!!`;
+            } else if (step.goalCount === 2) {
+              styled += ` That's a pair on the day for #${step.primary}!`;
+            } else if (step.goalCount >= 4) {
+              styled += ` Incredible! That's goal #${step.goalCount} today for #${step.primary}! Unstoppable!!`;
+            }
+
+            if (isAnnouncer) {
+              const clutch = isClutchGoal();
+              const useHolyMackinaw = clutch && (Math.random() < 0.35);
+
+              if (useHolyMackinaw) {
+                if (sIdx === 0) {
+                  let clean = styled.replace(/^and\s+/i, '');
+                  styled = "HOLY MACKINAW!! " + clean.charAt(0).toUpperCase() + clean.slice(1);
+                } else {
+                  styled = styled.replace(/^and\s+/i, 'and HOLY MACKINAW, ');
+                }
+              } else if (sIdx === 0) {
+                const intro = announcerIntros[Math.floor(Math.random() * announcerIntros.length)];
+                const outro = announcerOutros[Math.floor(Math.random() * announcerOutros.length)];
+                let clean = styled.replace(/^and\s+/i, '');
+                styled = intro + clean.charAt(0).toUpperCase() + clean.slice(1) + outro;
+              }
+            }
+          }
+
+          // If same player as step 1, clean up repeated "and #7 " to "and "
+          if (sIdx > 0 && isSame && step.primary) {
+            styled = styled.replace(new RegExp('^and\\s+#' + step.primary + '\\s+', 'i'), 'and ');
+          }
+
+          if (sIdx === 0) {
+            let prefix = '';
+            if (currentTimeTag) {
+              const per = document.getElementById('periodSelect').value;
+              prefix = `[${currentTimeTag} ${per}] `;
+            }
+            step.text = prefix + styled.charAt(0).toUpperCase() + styled.slice(1);
+          } else {
+            step.text = styled;
+          }
+        });
+
+        box.value = currentSteps.map(s => s.text).join(', ');
+        autoResizeTextarea();
+      } else {
+        // Fallback for standalone single phrase
+        if (!lastKey || !phrases[lastKey]) return;
+        lastVarIndex = (lastVarIndex + 1) % phrases[lastKey].length;
+        const newPhrase = getPhrase(lastKey, lastVarIndex);
+        let styled = newPhrase;
+        if (isAnnouncer && lastKey.startsWith('goal-')) {
+          const intro = announcerIntros[Math.floor(Math.random() * announcerIntros.length)];
+          const outro = announcerOutros[Math.floor(Math.random() * announcerOutros.length)];
+          let clean = styled.replace(/^and\s+/i, '');
+          styled = intro + clean.charAt(0).toUpperCase() + clean.slice(1) + outro;
+        }
+        let prefix = '';
+        if (currentTimeTag) {
+          const per = document.getElementById('periodSelect').value;
+          prefix = `[${currentTimeTag} ${per}] `;
+        }
+        box.value = prefix + styled.charAt(0).toUpperCase() + styled.slice(1);
+        autoResizeTextarea();
+      }
+
+      saveGameState();
+    }
+
+    // Period Status
+    function periodStatus(type) {
+      pushUndoState();
+      const per = document.getElementById('periodSelect').value;
+      const our = document.getElementById('ourTeam').value.trim() || 'Bulldogs';
+      const opp = document.getElementById('oppTeam').value.trim() || 'Hawks';
+      const sc = getScoreText();
+
+      const gameType = document.getElementById('gameTypeSelect').value;
+      const tourney = document.getElementById('tourneyNameInput').value.trim();
+      let tourneyPrefix = '';
+      if (tourney && gameType) {
+        tourneyPrefix = `[${tourney} - ${gameType}] `;
+      } else if (tourney) {
+        tourneyPrefix = `[${tourney}] `;
+      } else if (gameType) {
+        tourneyPrefix = `[${gameType}] `;
+      }
+
+      const list = periodStatusPhrases[type];
+      const idx = Math.floor(Math.random() * list.length);
+      const text = tourneyPrefix + list[idx](per, our, opp, sc, ourScore, oppScore);
+
+      currentSteps = [{
+        key: type,
+        isPeriodStatus: true,
+        varIndex: idx,
+        text: text
+      }];
+
+      document.getElementById('output').value = text;
+      lastKey = null;
+      autoResizeTextarea();
+      saveGameState();
+    }
+
+    // Undo System
+    function pushUndoState() {
+      const snapshot = {
+        ourScore,
+        oppScore,
+        playerGoals: JSON.parse(JSON.stringify(playerGoals)),
+        output: document.getElementById('output').value,
+        currentSteps: JSON.parse(JSON.stringify(currentSteps)),
+        primaryPlayer,
+        assistPlayer,
+        lastKey,
+        lastVarIndex
+      };
+      undoStack.push(snapshot);
+      if (undoStack.length > 25) undoStack.shift();
+    }
+
+    function undoLastAction() {
+      if (undoStack.length === 0) return;
+      const prev = undoStack.pop();
+      ourScore = prev.ourScore;
+      oppScore = prev.oppScore;
+      playerGoals = prev.playerGoals ? JSON.parse(JSON.stringify(prev.playerGoals)) : {};
+      document.getElementById('ourScore').textContent = ourScore;
+      document.getElementById('oppScore').textContent = oppScore;
+      document.getElementById('output').value = prev.output;
+      autoResizeTextarea();
+      currentSteps = prev.currentSteps ? JSON.parse(JSON.stringify(prev.currentSteps)) : [];
+      primaryPlayer = prev.primaryPlayer;
+      assistPlayer = prev.assistPlayer;
+      lastKey = prev.lastKey;
+      lastVarIndex = prev.lastVarIndex;
+      updatePlayerBadges();
+      saveGameState();
+    }
+
+    // Sharing & Clipboard
+    async function shareNative() {
+      const txt = document.getElementById('output').value.trim();
+      if (!txt) return;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ text: txt });
+        } catch (e) {
+          // User cancelled or denied; fallback to clipboard
+        }
+      } else {
+        copyText();
+      }
+    }
+
+    async function copyText() {
+      const box = document.getElementById('output');
+      const txt = box.value.trim();
+      if (!txt) return;
+
+      try {
+        if (navigator.clipboard) await navigator.clipboard.writeText(txt);
+        else { box.select(); document.execCommand('copy'); }
+        
+        const b = document.getElementById('copyBtn');
+        const orig = b.innerHTML;
+        b.textContent = '✓ Copied!';
+        b.style.background = '#16a34a';
+        setTimeout(() => {
+          b.innerHTML = orig;
+          b.style.background = 'linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%)';
+        }, 1500);
+      } catch (e) {
+        alert('Copied: ' + txt);
+      }
+    }
+
+    // State Persistence (localStorage)
+    function saveGameState() {
+      const state = {
+        ourTeam: document.getElementById('ourTeam').value,
+        oppTeam: document.getElementById('oppTeam').value,
+        ourScore,
+        oppScore,
+        period: document.getElementById('periodSelect').value,
+        gameType: document.getElementById('gameTypeSelect').value,
+        tourneyName: document.getElementById('tourneyNameInput').value,
+        multiStep: document.getElementById('multiStepToggle').checked,
+        announcer: document.getElementById('announcerToggle').checked,
+        output: document.getElementById('output').value,
+        currentSteps,
+        playerGoals,
+        primaryPlayer,
+        assistPlayer
+      };
+      try {
+        localStorage.setItem('hockey_gamestate_v2', JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function loadGameState() {
+      try {
+        const raw = localStorage.getItem('hockey_gamestate_v2');
+        if (!raw) return;
+        const s = JSON.parse(raw);
+        if (s.ourTeam) document.getElementById('ourTeam').value = s.ourTeam;
+        if (s.oppTeam) document.getElementById('oppTeam').value = s.oppTeam;
+        if (typeof s.ourScore === 'number') ourScore = s.ourScore;
+        if (typeof s.oppScore === 'number') oppScore = s.oppScore;
+        document.getElementById('ourScore').textContent = ourScore;
+        document.getElementById('oppScore').textContent = oppScore;
+        if (s.period) document.getElementById('periodSelect').value = s.period;
+        if (s.gameType) document.getElementById('gameTypeSelect').value = s.gameType;
+        if (s.tourneyName) document.getElementById('tourneyNameInput').value = s.tourneyName;
+        if (typeof s.multiStep === 'boolean') document.getElementById('multiStepToggle').checked = s.multiStep;
+        if (typeof s.announcer === 'boolean') document.getElementById('announcerToggle').checked = s.announcer;
+        if (s.output) {
+          document.getElementById('output').value = s.output;
+          autoResizeTextarea();
+        }
+        if (Array.isArray(s.currentSteps)) currentSteps = s.currentSteps;
+        if (s.playerGoals && typeof s.playerGoals === 'object') playerGoals = s.playerGoals;
+        if (s.primaryPlayer) primaryPlayer = s.primaryPlayer;
+        if (s.assistPlayer) assistPlayer = s.assistPlayer;
+      } catch (e) {}
+    }
+
+    function resetNewGame() {
+      if (!confirm('Start a new game? This will reset scores and text to 0-0.')) return;
+      pushUndoState();
+      ourScore = 0;
+      oppScore = 0;
+      playerGoals = {};
+      primaryPlayer = null;
+      assistPlayer = null;
+      currentSteps = [];
+      document.getElementById('ourScore').textContent = 0;
+      document.getElementById('oppScore').textContent = 0;
+      document.getElementById('periodSelect').value = '1st';
+      document.getElementById('output').value = '';
+      updatePlayerBadges();
+      autoResizeTextarea();
+      saveGameState();
+    }
+  </script>
+</body>
+</html>
